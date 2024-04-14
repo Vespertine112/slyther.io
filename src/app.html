@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		%sveltekit.head%
+	</head>
+	<style>
+		:root {
+			--c1: #fcaa67;
+			--c2: #b0413e;
+			--c3: #ffffc7;
+			--c4: #548687;
+			--c5: #473335;
+		}
+
+		body {
+			margin: 0;
+			background-color: var(--c5);
+
+			background-image: linear-gradient(to bottom right, var(--c5), var(--c4));
+		}
+
+		.shadow {
+			box-shadow: 10px 8px 5px rgba(0, 0, 0, 0.4);
+		}
+	</style>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
