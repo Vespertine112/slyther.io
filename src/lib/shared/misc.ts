@@ -1,9 +1,4 @@
 // Generic Helper Functions
-
-export function getRandomInt(max: number) {
-	return Math.floor(Math.random() * max);
-}
-
 export type Music = {};
 
 // Fades out music. Then resets the time & volume

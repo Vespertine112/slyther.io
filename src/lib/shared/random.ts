@@ -1,4 +1,4 @@
-import { Vector } from '../client/gameTypes';
+import { Vector } from '../server/game';
 
 export const Random = {
 	nextCircleVector: (): Vector => {
@@ -51,5 +51,8 @@ export const Random = {
 		}
 
 		return ranges;
+	},
+	getRandomInt(max: number) {
+		return Math.floor(Math.random() * max);
 	}
 };

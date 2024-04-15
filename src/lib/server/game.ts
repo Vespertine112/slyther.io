@@ -1,6 +1,5 @@
-import { getRandomInt } from '$lib/shared/misc';
-import type { Entity } from './shared/entites/entity';
-import { Random } from './shared/random';
+import type { Entity } from '../shared/entites/entity';
+import { Random } from '../shared/random';
 
 /**
  * ==============================================================================
@@ -184,8 +183,8 @@ export class Game {
 
 		let halfHeight = this.canvas.height / 2;
 		this.terrainElevationMap = new Array<Position>(
-			new Position(0, getRandomInt(halfHeight / 2) + halfHeight),
-			new Position(this.canvas.width, getRandomInt(halfHeight / 2) + halfHeight)
+			new Position(0, Random.getRandomInt(halfHeight / 2) + halfHeight),
+			new Position(this.canvas.width, Random.getRandomInt(halfHeight / 2) + halfHeight)
 		);
 
 		this.fuelLevel = level.fuel;

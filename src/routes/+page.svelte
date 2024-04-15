@@ -1,7 +1,16 @@
 <script lang="ts">
-	import { Socket } from 'socket.io';
 	import { onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { io } from 'socket.io-client';
+
+	const socket = io();
+
+	socket.on('eventFromServer', (message) => {
+		console.log(message);
+		setTimeout(() => {
+			socket.emit('messages', 'data');
+		}, 1000);
+	});
 
 	$: show = false;
 
