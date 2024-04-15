@@ -1,144 +1,6 @@
-import { getRandomInt } from '$lib/misc';
 import type { Entity } from '../shared/entites/entity';
 import { Random } from '../shared/random';
-
-/**
- * ==============================================================================
- * Classes for Game Logic
- * ==============================================================================
- */
-
-/**
- * Game Position
- */
-export class Position {
-	x: number;
-	y: number;
-	parent: Position | undefined;
-
-	constructor(x: number, y: number) {
-		this.x = x;
-		this.y = y;
-	}
-
-	/**
-	 * @param c Position object
-	 * @returns boolean - if two positions are the same coordinates
-	 */
-	compare(c: Position | undefined): boolean {
-		if (!c) return false;
-		return c.x == this.x && c.y == this.y;
-	}
-
-	/**
-	 * Generates a new position object given a vector applied to a point
-	 */
-	fromVector(vec: Vector) {
-		return new Position(this.x + vec.x, this.y + vec.y);
-	}
-}
-
-/**
- * Vector Class
- */
-export class Vector {
-	x: number;
-	y: number;
-
-	constructor(x: number, y: number) {
-		this.x = x;
-		this.y = y;
-	}
-
-	/**
-	 * @returns number - computed magnitude of the vector
-	 */
-	getMagnitude(): number {
-		return Math.sqrt(this.x * this.x + this.y * this.y);
-	}
-
-	/**
-	 * Add another vector to this Vector
-	 */
-	add(other: Vector): Vector {
-		this.x += other.x;
-		this.y += other.y;
-
-		return this;
-	}
-
-	mult(time: number): Vector {
-		this.x *= time;
-		this.y *= time;
-		return this;
-	}
-}
-
-/**
- * Game level
- * NOTE: The landStripWidth is a percentage of total terrain. 40 = 40% of total
- * terrain is a landing strip.
- * TODO: Add a entity for UI Menuing, etc, background identifier, etc
- */
-export interface Level {
-	level: string;
-	landStripWidth: number;
-	numOfLandStrips: number;
-	surfaceColor: string;
-	varience: number;
-	gravity: Vector;
-	fuel: number;
-	thrustMagnitude: number;
-	background: string;
-}
-
-// Levels are based on actual surface gravity of the solar bodies. Maybe re-think if this doesn't work in game
-export let levels: Level[] = [
-	{
-		level: 'Pluto',
-		numOfLandStrips: 2,
-		surfaceColor: '#B6967A',
-		landStripWidth: 10,
-		varience: 0.1,
-		fuel: 500,
-		gravity: new Vector(0, -0.62),
-		thrustMagnitude: 0.4,
-		background: '/backgrounds/level_one_background.png'
-	},
-	{
-		level: 'Ganymede',
-		numOfLandStrips: 1,
-		landStripWidth: 10,
-		surfaceColor: '#4B6784',
-		varience: 0.1,
-		fuel: 400,
-		gravity: new Vector(0, -0.146),
-		thrustMagnitude: 0.2,
-		background: '/backgrounds/level_two_background.png'
-	},
-	{
-		level: 'Moon',
-		numOfLandStrips: 3,
-		landStripWidth: 7,
-		surfaceColor: '#878AA1',
-		varience: 0.15,
-		fuel: 300,
-		gravity: new Vector(0, -1.625),
-		thrustMagnitude: 1,
-		background: '/backgrounds/level_three_background.png'
-	},
-	{
-		level: 'Mars',
-		numOfLandStrips: 1,
-		landStripWidth: 10,
-		surfaceColor: '#FF8933',
-		varience: 0.15,
-		fuel: 350,
-		gravity: new Vector(0, -3.71),
-		thrustMagnitude: 2.2,
-		background: '/backgrounds/level_four_background.png'
-	}
-];
+import { Position, Vector } from '$lib/shared/gameTypes';
 
 export enum GameStatusEnum {
 	Playing,
@@ -155,7 +17,6 @@ export class Game {
 	playTime: number = 0;
 	gameState: GameStatusEnum = GameStatusEnum.Idle;
 	terrainElevationMap: Array<Position> = new Array<Position>();
-	level!: Level;
 
 	fuelLevel: number = 0;
 	landerSpeed: number = 0;
@@ -172,13 +33,7 @@ export class Game {
 
 	constructor() {}
 
-	initalizeGame(level: Level, canvas: HTMLCanvasElement) {
-		this.playerScore = 0;
-		this.playTime = 0;
-		this.level = level;
-		this.gravity = new Vector(0, -level.gravity.y);
-		this.gameState = GameStatusEnum.Playing;
-
+	initalizeGame(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
 

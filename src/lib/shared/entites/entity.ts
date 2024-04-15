@@ -1,7 +1,5 @@
 import { Position, Vector } from '../../client/gameTypes';
 import Sprite from './sprite';
-import { cubicOut } from 'svelte/easing';
-import { tweened, type Tweened } from 'svelte/motion';
 
 export class Entity {
 	sprites: { [state: string]: Sprite }; // Aggregates sprites w/ state access
