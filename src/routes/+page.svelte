@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { Socket } from 'socket.io';
+	import { onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	$: show = false;
 
-	onMount(() => {
+	onMount(async () => {
 		show = true;
+		await tick();
 	});
 </script>
 
