@@ -1,4 +1,4 @@
-import { Position, Vector } from '../../client/gameTypes';
+import { Vector, Position } from '../gameTypes';
 import Sprite from './sprite';
 
 export class Entity {

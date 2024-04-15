@@ -30,6 +30,7 @@
 			<div class="menu shadow">
 				<button class="menuButton shadow">New Game</button>
 				<button class="menuButton shadow">High Scores</button>
+				<button class="menuButton shadow">Controls</button>
 				<button class="menuButton shadow">Credits</button>
 			</div>
 		</div>

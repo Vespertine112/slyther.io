@@ -1,4 +1,4 @@
-import { Vector } from '../server/game';
+import { Vector } from './gameTypes';
 
 export const Random = {
 	nextCircleVector: (): Vector => {

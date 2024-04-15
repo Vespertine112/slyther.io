@@ -1,6 +1,6 @@
 export enum NetworkIds {
 	INPUT = 'input',
-	INPUT_MOVE = 'move',
+	INPUT_BOOST = 'boost',
 	INPUT_ROTATE_LEFT = 'rotate-left',
 	INPUT_ROTATE_RIGHT = 'rotate-right',
 	CONNECT_ACK = 'connect-ack',
