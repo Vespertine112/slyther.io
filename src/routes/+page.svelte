@@ -1,22 +1,16 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { io } from 'socket.io-client';
-
-	const socket = io();
-
-	socket.on('eventFromServer', (message) => {
-		console.log(message);
-		setTimeout(() => {
-			socket.emit('messages', 'data');
-		}, 1000);
-	});
 
 	$: show = false;
 
 	onMount(async () => {
 		show = true;
 		await tick();
+	});
+
+	onDestroy(() => {
+		show = false;
 	});
 </script>
 
@@ -28,10 +22,10 @@
 
 		<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 			<div class="menu shadow">
-				<button class="menuButton shadow">New Game</button>
-				<button class="menuButton shadow">High Scores</button>
-				<button class="menuButton shadow">Controls</button>
-				<button class="menuButton shadow">Credits</button>
+				<a class="menuButton shadow" href="/game">New Game</a>
+				<a class="menuButton shadow" href="/">High Scores</a>
+				<a class="menuButton shadow" href="/">Controls</a>
+				<a class="menuButton shadow" href="/">Credits</a>
 			</div>
 		</div>
 
