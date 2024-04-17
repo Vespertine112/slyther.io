@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Game } from '$lib/client/game';
 	import InputManager from '$lib/inputManager';
-	import { onMount, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
@@ -44,6 +44,10 @@
 
 		game.initalizeGame(canvas, inputManager);
 		gameLoop(performance.now());
+	});
+
+	onDestroy(() => {
+		game.exit();
 	});
 </script>
 

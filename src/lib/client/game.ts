@@ -4,15 +4,10 @@ import { Position, Vector } from '$lib/shared/gameTypes';
 import type InputManager from '$lib/inputManager';
 import { CustomCommands } from '$lib/inputManager';
 import { Socket, io } from 'socket.io-client';
-import type {
-	NetworkInputMessage,
-	NetworkMessage,
-	PlayerUpdateMessage,
-	STCNetworkMessage
-} from '$lib/shared/network-message';
 import { NetworkIds } from '$lib/shared/network-ids';
 import { Queue } from '$lib/shared/queue';
 import { Player } from '$lib/shared/player';
+import { Renderer } from './renderer';
 
 export enum GameStatusEnum {
 	Playing,
@@ -31,11 +26,14 @@ export class Game {
 
 	private canvas!: HTMLCanvasElement;
 	private oldCanvas!: { width: number; height: number }; // Tracks canvas changes to re-size terrain on dynamic changes
+	private renderer!: Renderer;
 	private inputManager!: InputManager;
+
 	private socket: Socket;
 	private messageId = 0;
-	private messageHistory = new Queue<NetworkMessage>();
-	private networkQueue = new Queue<STCNetworkMessage>();
+	private messageHistory = new Queue<any>();
+	private networkQueue = new Queue<any>();
+
 	private playerSelf: Player;
 	private playerOthers: { [clientId: string]: Player } = {};
 
@@ -48,6 +46,7 @@ export class Game {
 		this.canvas = canvas;
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
 		this.inputManager = inputManager;
+		this.renderer = new Renderer(canvas);
 
 		this.setupSocketListeners();
 
@@ -58,7 +57,7 @@ export class Game {
 		this.inputManager.update(elapsedTime);
 
 		let processQueue = this.networkQueue;
-		this.networkQueue = new Queue<STCNetworkMessage>();
+		this.networkQueue = new Queue<any>();
 
 		while (!processQueue.empty) {
 			let message = processQueue.dequeue();
@@ -92,19 +91,25 @@ export class Game {
 		}
 	}
 
-	render() {}
+	render() {
+		this.renderer.renderPlayer(this.playerSelf);
+
+		for (let id in this.playerOthers) {
+			let player = this.playerOthers[id];
+			this.renderer.renderPlayer(player);
+		}
+	}
 
 	private updatePlayerOther(data: any) {
 		if (this.playerOthers.hasOwnProperty(data.clientId)) {
 			let player = this.playerOthers[data.clientId];
 			player.updateWindow = data.updateWindow;
-
 			player.position = data.position;
 			player.direction = data.direction;
 		}
 	}
 
-	private updatePlayerSelf(data: PlayerUpdateMessage) {
+	private updatePlayerSelf(data) {
 		this.playerSelf.position = data.position;
 		this.playerSelf.direction = data.direction;
 
@@ -174,8 +179,8 @@ export class Game {
 	}
 
 	registerKeyboardHandlers() {
-		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: true }, (elapsedTime) => {
-			let message: NetworkMessage = {
+		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: false }, (elapsedTime) => {
+			let message = {
 				id: this.messageId,
 				elapsedTime: elapsedTime,
 				type: NetworkIds.INPUT_ROTATE_RIGHT
@@ -184,7 +189,7 @@ export class Game {
 			this.messageHistory.enqueue(message);
 		});
 		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: false }, (elapsedTime) => {
-			let message: NetworkMessage = {
+			let message = {
 				id: this.messageId,
 				elapsedTime: elapsedTime,
 				type: NetworkIds.INPUT_ROTATE_LEFT
@@ -196,6 +201,7 @@ export class Game {
 
 	exit() {
 		this.gameState = GameStatusEnum.Idle;
+		this.socket.disconnect();
 	}
 
 	canvasChangeHookForTerrain() {
@@ -219,7 +225,7 @@ export class Game {
 		return this.canvas.height != this.oldCanvas.height || this.canvas.width != this.oldCanvas.width;
 	}
 
-	private connectPlayerSelf(data: PlayerUpdateMessage) {
+	private connectPlayerSelf(data) {
 		this.playerSelf.position = data.position;
 
 		this.playerSelf.size = data.size;
@@ -229,8 +235,8 @@ export class Game {
 		this.playerSelf.rotateRate = data.rotateRate;
 	}
 
-	private connectPlayerOther(data: PlayerUpdateMessage) {
-		let player = new Player(data.id);
+	private connectPlayerOther(data) {
+		let player = new Player(data.clientId);
 		player.position = data.position;
 		player.direction = data.direction;
 		player.lastUpdate = performance.now();
@@ -242,10 +248,10 @@ export class Game {
 
 		player.size = data.size;
 
-		this.playerOthers[data.id] = player;
+		this.playerOthers[data.clientId] = player;
 	}
 
-	private disconnectPlayerOther(data: NetworkMessage) {
+	private disconnectPlayerOther(data) {
 		delete this.playerOthers[data.id];
 	}
 

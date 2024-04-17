@@ -60,8 +60,6 @@ export class GameServer {
 			let input = processQueue.dequeue()!;
 			let client = this.activeClients[input.clientId];
 			client.lastMessageId = input.message.id;
-			console.log(input.message.type);
-
 			switch (input.message.type) {
 				case NetworkIds.INPUT_BOOST:
 					client.player.boost(input.message.elapsedTime);
@@ -78,7 +76,7 @@ export class GameServer {
 
 	update(elapsedTime: number, currentTime: number) {
 		for (let clientId in this.activeClients) {
-			this.activeClients[clientId].player.update(currentTime);
+			this.activeClients[clientId].player.update(elapsedTime);
 		}
 
 		// Perform collision checks for all snakes
@@ -162,7 +160,7 @@ export class GameServer {
 		};
 
 		socketServer.on('connection', (socket) => {
-			console.log('Connection established: ', socket.id);
+			this.log('Connection   :', socket.id);
 
 			// Create an entry in our list of connected clients
 			let newPlayer = new Player(socket.id);
@@ -175,15 +173,13 @@ export class GameServer {
 
 			socket.emit(NetworkIds.CONNECT_ACK, {
 				direction: newPlayer.direction,
-				position: newPlayer.position,
+				position: new Position(200, 200),
 				size: newPlayer.size,
 				rotateRate: newPlayer.rotateRate,
 				speed: newPlayer.speed
 			});
 
 			socket.on(NetworkIds.INPUT, (data) => {
-				console.log(data);
-
 				this.inputQueue.enqueue({
 					clientId: socket.id,
 					message: data
@@ -191,6 +187,7 @@ export class GameServer {
 			});
 
 			socket.on('disconnect', () => {
+				this.log(`Disconnection: ${socket.id}`);
 				delete this.activeClients[socket.id];
 				notifyDisconnect(socket.id);
 			});
@@ -202,5 +199,9 @@ export class GameServer {
 	// Kills the game server
 	exit() {
 		this.quit = true;
+	}
+
+	private log(...s: string[]) {
+		console.log(`\x1b[0;31m[WSS]\x1b[0m ${s}`);
 	}
 }

@@ -1,6 +1,6 @@
 import { Random } from './random';
-import type { Entity } from './entites/entity';
-import { Position, type Vector } from './gameTypes';
+import type { Entity } from './entities/entity';
+import { Position } from './gameTypes';
 
 export class Player {
 	private head: Entity;
@@ -9,7 +9,7 @@ export class Player {
 
 	size: number; // Represents player size (length)
 	speed: number;
-	direction: Vector;
+	direction: number; // Direction in radians
 	rotateRate: number = Math.PI / 1000;
 	position: Position;
 
@@ -21,31 +21,39 @@ export class Player {
 
 	constructor(clientId: string) {
 		this.clientId = clientId;
-		this.position = new Position(0, 0);
+		this.position = new Position(200, 200);
 		this.size = 10;
-		this.speed = 10;
-		this.direction = Random.nextCircleVector();
+		this.speed = 0.02;
+		this.direction = Random.getRandomInt(Math.PI * 2); // Random direction in radians
 	}
 
-	// Moves a given player based on elapsed time
+	// Moves a player based on elapsed time
 	boost(elapsedTime: number) {
 		this.reportUpdate = true;
 
-		let vectorX = Math.cos(this.direction.x);
-		let vectorY = Math.sin(this.direction.y);
+		// Calculate movement components based on direction and speed
+		const deltaX = Math.cos(this.direction) * this.speed * elapsedTime;
+		const deltaY = Math.sin(this.direction) * this.speed * elapsedTime;
 
-		this.position.x += vectorX * elapsedTime * this.speed;
-		this.position.y += vectorY * elapsedTime * this.speed;
+		// Update player position
+		this.position.x += deltaX;
+		this.position.y += deltaY;
 	}
 
-	// Rotates a players head right
+	// Rotates a player's head right
 	rotateRight(elapsedTime: number) {
 		this.reportUpdate = true;
+
+		// Increment direction angle
+		this.direction += this.rotateRate * elapsedTime;
 	}
 
-	// Rotates a players head left
+	// Rotates a player's head left
 	rotateLeft(elapsedTime: number) {
 		this.reportUpdate = true;
+
+		// Decrement direction angle
+		this.direction -= this.rotateRate * elapsedTime;
 	}
 
 	// Player consumes 'foods' food units
@@ -57,10 +65,12 @@ export class Player {
 	update(elapsedTime: number) {
 		this.reportUpdate = true;
 
-		let vectorX = Math.cos(this.direction.x);
-		let vectorY = Math.sin(this.direction.y);
+		// Calculate movement components based on direction and speed
+		const deltaX = Math.cos(this.direction) * this.speed * elapsedTime;
+		const deltaY = Math.sin(this.direction) * this.speed * elapsedTime;
 
-		this.position.x += vectorX * elapsedTime * this.speed;
-		this.position.y += vectorY * elapsedTime * this.speed;
+		// Update player position
+		this.position.x += deltaX;
+		this.position.y += deltaY;
 	}
 }

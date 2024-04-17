@@ -46,8 +46,6 @@ export default class InputManager {
 
 	update(elapsedTime: number) {
 		for (let key in this.activeKeys) {
-			console.log(key);
-
 			// Resolve custom commnds to their handlers
 			if (this.handlers.hasOwnProperty(key)) {
 				if (key == 'MouseUp') {
