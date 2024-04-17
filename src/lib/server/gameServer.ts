@@ -1,7 +1,7 @@
 import { Vector, Position } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
-import { Player } from './player';
+import { Player } from '../shared/player';
 import type { NetworkInputMessage, NetworkMessage } from '../shared/network-message';
 import { Queue } from '../shared/queue';
 
@@ -18,23 +18,30 @@ export class GameServer {
 	private quit: boolean = false;
 	private lastUpdate: number = 0;
 	private activeClients: { [clientId: string]: Client } = {};
-	private inputQueue: Queue<NetworkInputMessage> = new Queue<NetworkInputMessage>();
+	private inputQueue: Queue<any> = new Queue<any>();
 
 	constructor() {}
 
 	gameLoop() {
-		let currentTime = performance.now();
-		let elapsedTime = 0;
+		let lastTime = performance.now();
+		let quit = false;
 
-		while (!this.quit) {
+		const loop = () => {
+			if (quit) return;
+
+			const currentTime = performance.now();
+			const elapsedTime = currentTime - lastTime;
+
 			this.processInput(elapsedTime);
 			this.update(elapsedTime, currentTime);
 			this.updateClients(elapsedTime);
 
-			elapsedTime = performance.now() - currentTime;
-			currentTime = performance.now();
-			this.quit = true;
-		}
+			const nextInterval = Math.max(5, elapsedTime); // Ensure at least 5 ms interval. If it runs too fast we lag the server
+			lastTime = currentTime;
+			setTimeout(loop, nextInterval);
+		};
+
+		loop();
 	}
 
 	initalizeGame(socketServer: Server) {
@@ -47,12 +54,14 @@ export class GameServer {
 
 	processInput(elapsedTime: number) {
 		let processQueue = this.inputQueue;
-		this.inputQueue = new Queue<NetworkInputMessage>();
+		this.inputQueue = new Queue<any>();
 
 		while (!processQueue.empty) {
 			let input = processQueue.dequeue()!;
 			let client = this.activeClients[input.clientId];
 			client.lastMessageId = input.message.id;
+			console.log(input.message.type);
+
 			switch (input.message.type) {
 				case NetworkIds.INPUT_BOOST:
 					client.player.boost(input.message.elapsedTime);
@@ -156,7 +165,7 @@ export class GameServer {
 			console.log('Connection established: ', socket.id);
 
 			// Create an entry in our list of connected clients
-			let newPlayer = new Player(socket.id, new Position(0, 0));
+			let newPlayer = new Player(socket.id);
 			newPlayer.clientId = socket.id;
 			this.activeClients[socket.id] = {
 				socket: socket,
@@ -172,7 +181,9 @@ export class GameServer {
 				speed: newPlayer.speed
 			});
 
-			socket.on(NetworkIds.INPUT, (data: NetworkMessage) => {
+			socket.on(NetworkIds.INPUT, (data) => {
+				console.log(data);
+
 				this.inputQueue.enqueue({
 					clientId: socket.id,
 					message: data

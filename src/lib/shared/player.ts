@@ -1,6 +1,6 @@
-import { Random } from '../shared/random';
-import type { Entity } from '../shared/entites/entity';
-import { Position, type Vector } from '../shared/gameTypes';
+import { Random } from './random';
+import type { Entity } from './entites/entity';
+import { Position, type Vector } from './gameTypes';
 
 export class Player {
 	private head: Entity;

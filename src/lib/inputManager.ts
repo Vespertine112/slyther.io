@@ -46,6 +46,8 @@ export default class InputManager {
 
 	update(elapsedTime: number) {
 		for (let key in this.activeKeys) {
+			console.log(key);
+
 			// Resolve custom commnds to their handlers
 			if (this.handlers.hasOwnProperty(key)) {
 				if (key == 'MouseUp') {
@@ -181,7 +183,7 @@ export default class InputManager {
 	// Load up custom commands from localStorage
 	private loadCustomCommands() {
 		if (!browser) return;
-		const savedCommands = localStorage.getItem('customCommands');
+		const savedCommands = localStorage.getItem('slyther.customCommands');
 		if (savedCommands) {
 			this.customGameCommands = JSON.parse(savedCommands);
 		}
@@ -190,6 +192,6 @@ export default class InputManager {
 	// Savecustom commands to localStorage
 	private saveCustomCommands() {
 		if (!browser) return;
-		localStorage.setItem('customCommands', JSON.stringify(this.customGameCommands));
+		localStorage.setItem('slyther.customCommands', JSON.stringify(this.customGameCommands));
 	}
 }

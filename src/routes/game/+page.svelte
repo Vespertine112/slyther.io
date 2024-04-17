@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Game } from '$lib/client/game';
+	import InputManager from '$lib/inputManager';
 	import { onMount, tick } from 'svelte';
 
 	$: canvasWidth = 100;
@@ -10,36 +11,48 @@
 	let lastTimestamp = performance.now();
 
 	let game: Game = new Game();
+	let inputManager: InputManager = new InputManager();
+	const keyPressHandler = inputManager.keyPress.bind(inputManager);
+	const keyReleaseHandler = inputManager.keyRelease.bind(inputManager);
+	const mouseMoveHandler = inputManager.mouseMove.bind(inputManager);
+	const mouseUpHandler = inputManager.mouseUp.bind(inputManager);
 
 	onMount(async () => {
 		show = true;
 		await tick();
 
-		function update(elapsedTime: number) {
+		function gameLoop(time: number) {
+			const elapsedTime = time - lastTimestamp;
+			lastTimestamp = time;
+
 			// Needed for fully-reactive canvas
 			if (canvas) {
 				canvas.width = canvasWidth;
 				canvas.height = canvasHeight;
 			}
-		}
 
-		function gameLoop(time: number) {
-			const elapsedTime = time - lastTimestamp;
-			lastTimestamp = time;
+			game.processInput(elapsedTime);
 
-			update(elapsedTime);
+			game.update(elapsedTime);
 
-			// render(elapsedTime);
+			game.render();
 
-			// frameCounter += 1;
+			frameCounter += 1;
 
 			requestAnimationFrame(gameLoop);
 		}
 
-		game.initalizeGame(canvas);
+		game.initalizeGame(canvas, inputManager);
 		gameLoop(performance.now());
 	});
 </script>
+
+<svelte:window
+	on:keydown={keyPressHandler}
+	on:keyup={keyReleaseHandler}
+	on:mousemove={mouseMoveHandler}
+	on:mouseup={mouseUpHandler}
+/>
 
 {#if show}
 	<div class="mainWrapper" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
