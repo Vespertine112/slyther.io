@@ -46,7 +46,7 @@ export class Game {
 		this.canvas = canvas;
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
 		this.inputManager = inputManager;
-		this.renderer = new Renderer(canvas);
+		this.renderer = new Renderer(canvas, this.playerSelf);
 
 		this.setupSocketListeners();
 
@@ -92,12 +92,13 @@ export class Game {
 	}
 
 	render() {
-		this.renderer.renderPlayer(this.playerSelf);
+		this.renderer.renderPlayerOther(this.playerSelf);
 
 		for (let id in this.playerOthers) {
 			let player = this.playerOthers[id];
-			this.renderer.renderPlayer(player);
+			this.renderer.renderPlayerOther(player);
 		}
+		// console.log(Math.sqrt(this.canvas.width * this.canvas.height));
 	}
 
 	private updatePlayerOther(data: any) {
@@ -181,7 +182,7 @@ export class Game {
 	registerKeyboardHandlers() {
 		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: false }, (elapsedTime) => {
 			let message = {
-				id: this.messageId,
+				id: this.messageId++,
 				elapsedTime: elapsedTime,
 				type: NetworkIds.INPUT_ROTATE_RIGHT
 			};
@@ -190,9 +191,18 @@ export class Game {
 		});
 		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: false }, (elapsedTime) => {
 			let message = {
-				id: this.messageId,
+				id: this.messageId++,
 				elapsedTime: elapsedTime,
 				type: NetworkIds.INPUT_ROTATE_LEFT
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+		});
+		this.inputManager.registerCommand([CustomCommands.Boost], { fireOnce: false }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_BOOST
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
@@ -240,10 +250,6 @@ export class Game {
 		player.position = data.position;
 		player.direction = data.direction;
 		player.lastUpdate = performance.now();
-
-		player.position.x = data.position.x;
-		player.position.y = data.position.y;
-		player.direction = data.direction;
 		player.updateWindow = 0;
 
 		player.size = data.size;
@@ -252,7 +258,7 @@ export class Game {
 	}
 
 	private disconnectPlayerOther(data) {
-		delete this.playerOthers[data.id];
+		delete this.playerOthers[data.clientId];
 	}
 
 	private generateThrustVector(angleInDegrees: number, magnitude: number): Vector {

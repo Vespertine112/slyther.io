@@ -4,6 +4,7 @@ import { NetworkIds } from '../shared/network-ids';
 import { Player } from '../shared/player';
 import type { NetworkInputMessage, NetworkMessage } from '../shared/network-message';
 import { Queue } from '../shared/queue';
+import { Random } from '../shared/random';
 
 interface Client {
 	socket: Socket;
@@ -164,6 +165,7 @@ export class GameServer {
 
 			// Create an entry in our list of connected clients
 			let newPlayer = new Player(socket.id);
+			newPlayer.position = this.getValidPostitionForNewPlayer();
 			newPlayer.clientId = socket.id;
 			this.activeClients[socket.id] = {
 				socket: socket,
@@ -173,7 +175,7 @@ export class GameServer {
 
 			socket.emit(NetworkIds.CONNECT_ACK, {
 				direction: newPlayer.direction,
-				position: new Position(200, 200),
+				position: newPlayer.position,
 				size: newPlayer.size,
 				rotateRate: newPlayer.rotateRate,
 				speed: newPlayer.speed
@@ -199,6 +201,10 @@ export class GameServer {
 	// Kills the game server
 	exit() {
 		this.quit = true;
+	}
+
+	private getValidPostitionForNewPlayer(): Position {
+		return new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1));
 	}
 
 	private log(...s: string[]) {

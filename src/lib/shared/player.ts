@@ -32,8 +32,8 @@ export class Player {
 		this.reportUpdate = true;
 
 		// Calculate movement components based on direction and speed
-		const deltaX = Math.cos(this.direction) * this.speed * elapsedTime;
-		const deltaY = Math.sin(this.direction) * this.speed * elapsedTime;
+		const deltaX = Math.cos(this.direction) * this.speed * 2 * elapsedTime;
+		const deltaY = Math.sin(this.direction) * this.speed * 2 * elapsedTime;
 
 		// Update player position
 		this.position.x += deltaX;
