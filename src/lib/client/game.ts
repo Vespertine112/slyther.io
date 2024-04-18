@@ -1,12 +1,10 @@
-import type { Entity } from '../shared/entites/entity';
-import { Random } from '../shared/random';
 import { Position, Vector } from '$lib/shared/gameTypes';
 import type InputManager from '$lib/inputManager';
 import { CustomCommands } from '$lib/inputManager';
 import { Socket, io } from 'socket.io-client';
 import { NetworkIds } from '$lib/shared/network-ids';
 import { Queue } from '$lib/shared/queue';
-import { Player } from '$lib/shared/player';
+import { Player } from '$lib/client/player';
 import { Renderer } from './renderer';
 
 export enum GameStatusEnum {
@@ -34,16 +32,17 @@ export class Game {
 	private messageHistory = new Queue<any>();
 	private networkQueue = new Queue<any>();
 
-	private playerSelf: Player;
+	private playerSelf!: Player;
 	private playerOthers: { [clientId: string]: Player } = {};
 
 	constructor() {
 		this.socket = io();
-		this.playerSelf = new Player(this.socket.id!);
 	}
 
 	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager) {
 		this.canvas = canvas;
+
+		this.playerSelf = new Player(this.socket.id!);
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
 		this.inputManager = inputManager;
 		this.renderer = new Renderer(canvas, this.playerSelf);
@@ -92,11 +91,11 @@ export class Game {
 	}
 
 	render() {
-		this.renderer.renderPlayerOther(this.playerSelf);
+		this.renderer.renderPlayer(this.playerSelf);
 
 		for (let id in this.playerOthers) {
 			let player = this.playerOthers[id];
-			this.renderer.renderPlayerOther(player);
+			this.renderer.renderPlayer(player);
 		}
 		// console.log(Math.sqrt(this.canvas.width * this.canvas.height));
 	}
@@ -107,12 +106,14 @@ export class Game {
 			player.updateWindow = data.updateWindow;
 			player.position = data.position;
 			player.direction = data.direction;
+			player.head.direction = data.direction;
 		}
 	}
 
 	private updatePlayerSelf(data) {
 		this.playerSelf.position = data.position;
 		this.playerSelf.direction = data.direction;
+		this.playerSelf.head.direction = data.direction;
 
 		let done = false;
 		while (!done && !this.messageHistory.empty) {
@@ -238,7 +239,7 @@ export class Game {
 	private connectPlayerSelf(data) {
 		this.playerSelf.position = data.position;
 
-		this.playerSelf.size = data.size;
+		this.playerSelf.length = data.length;
 
 		this.playerSelf.direction = data.direction;
 		this.playerSelf.speed = data.speed;
@@ -252,7 +253,7 @@ export class Game {
 		player.lastUpdate = performance.now();
 		player.updateWindow = 0;
 
-		player.size = data.size;
+		player.length = data.length;
 
 		this.playerOthers[data.clientId] = player;
 	}

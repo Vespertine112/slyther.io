@@ -1,11 +1,10 @@
 import { Random } from '../shared/random';
-import { ServerEntity } from '../server/entites/entity';
+import { Entity } from './entites/entity';
 import { Position } from '../shared/gameTypes';
-import Sprite from '../server/entites/sprite';
-import { browser } from '../../app';
+import Sprite from './entites/sprite';
 
 export class Player {
-	private head: ServerEntity;
+	head!: Entity;
 
 	length: number; // Represents player size (length)
 	speed: number;
@@ -19,25 +18,48 @@ export class Player {
 
 	clientId: string;
 
-	constructor(clientId: string, bodyEntitySpec?: { head: ServerEntity; body: ServerEntity; tail: ServerEntity }) {
+	constructor(clientId: string, bodyEntitySpec?: { head: Entity; body: Entity; tail: Entity }) {
 		this.clientId = clientId;
 		this.position = new Position(0, 0);
 		this.length = 10;
 		this.speed = 0.00001;
 		this.direction = Random.getRandomInt(Math.PI * 2); // Random direction in radians
 
+		let size = 30;
 		if (!bodyEntitySpec) {
-			if (browser) {
-				let headSprite = new Sprite('../../../static/assets/snakes/snake_green_head.png', { render: true }, {});
-				let bodySprite = new Sprite(
-					'../../../static/assets/snakes/snake_green_blob.png.png',
-					{ render: true },
-					{}
-				);
-				this.head = new ServerEntity('std', { render: true, position: this.position }, { std: headSprite });
-				let body = new ServerEntity('std', { render: true, position: this.position }, { std: bodySprite });
-				this.head.child = body;
-			}
+			let headSprite = new Sprite(
+				'assets/snakes/snake_green_head.png',
+				{ render: true },
+				{
+					animate: false,
+					animStartX: 0,
+					animStartY: 0,
+					animCropH: 1024,
+					animCropW: 1024,
+					sheetCols: 1,
+					sheetRows: 1
+				}
+			);
+			let bodySprite = new Sprite(
+				'assets/snakes/snake_green_blob.png',
+				{ render: true },
+				{
+					animate: false,
+					animStartX: 0,
+					animStartY: 0,
+					animCropH: 512,
+					animCropW: 512,
+					sheetCols: 1,
+					sheetRows: 1
+				}
+			);
+			this.head = new Entity(
+				'std',
+				{ render: true, position: this.position, width: size, height: size },
+				{ std: headSprite }
+			);
+			let body = new Entity('std', { render: true, position: this.position }, { std: bodySprite });
+			this.head.child = body;
 		}
 	}
 
@@ -60,6 +82,7 @@ export class Player {
 
 		// Increment direction angle
 		this.direction += this.rotateRate * elapsedTime;
+		this.head.direction += this.rotateRate * elapsedTime;
 	}
 
 	// Rotates a player's head left
@@ -68,6 +91,7 @@ export class Player {
 
 		// Decrement direction angle
 		this.direction -= this.rotateRate * elapsedTime;
+		this.head.direction -= this.rotateRate * elapsedTime;
 	}
 
 	// Player consumes 'foods' food units

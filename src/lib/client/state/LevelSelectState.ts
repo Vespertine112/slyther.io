@@ -1,7 +1,7 @@
-import { Entity } from '$lib/shared/entites/entity';
+import { ServerEntity } from '$lib/server/entites/entity';
 import { levels, type Game } from '$lib/client/gameTypes';
 import type InputManager from '$lib/inputManager';
-import Sprite from '$lib/shared/entites/sprite';
+import Sprite from '$lib/server/entites/sprite';
 import type { State } from './state';
 import { GameStateEnum } from './stateMachine';
 
@@ -11,7 +11,7 @@ export class LevelSelectState implements State {
 	inputManager: InputManager;
 
 	private introTimeTracker: number = 0;
-	private planets: { title: string; entity: Entity; clickCallback: () => GameStateEnum }[] = [];
+	private planets: { title: string; entity: ServerEntity; clickCallback: () => GameStateEnum }[] = [];
 
 	private fontSize: number = 24;
 	private outerPadding: number = 0;
@@ -34,28 +34,28 @@ export class LevelSelectState implements State {
 			{ render: true },
 			{ animate: true, fps: 17, animCropH: 150, animCropW: 150, sheetCols: 100, sheetRows: 1 }
 		);
-		let plutoEntity: Entity = new Entity('std', { render: true }, { std: plutoSprite });
+		let plutoEntity: ServerEntity = new ServerEntity('std', { render: true }, { std: plutoSprite });
 
 		let ganymedeSprite: Sprite = new Sprite(
 			'sprites/Ganymede.png',
 			{ render: true },
 			{ animate: true, fps: 17, animCropH: 150, animCropW: 150, sheetCols: 100, sheetRows: 1 }
 		);
-		let ganymedeEntity: Entity = new Entity('std', { render: true }, { std: ganymedeSprite });
+		let ganymedeEntity: ServerEntity = new ServerEntity('std', { render: true }, { std: ganymedeSprite });
 
 		let moonSprite: Sprite = new Sprite(
 			'sprites/Moon.png',
 			{ render: true },
 			{ animate: true, fps: 17, animCropH: 150, animCropW: 150, sheetCols: 100, sheetRows: 1 }
 		);
-		let moonEntity: Entity = new Entity('std', { render: true }, { std: moonSprite });
+		let moonEntity: ServerEntity = new ServerEntity('std', { render: true }, { std: moonSprite });
 
 		let marsSprite: Sprite = new Sprite(
 			'sprites/Mars.png',
 			{ render: true },
 			{ animate: true, fps: 17, animCropH: 150, animCropW: 150, sheetCols: 100, sheetRows: 1 }
 		);
-		let marsEntity: Entity = new Entity('std', { render: true }, { std: marsSprite });
+		let marsEntity: ServerEntity = new ServerEntity('std', { render: true }, { std: marsSprite });
 
 		this.planets.length = 0;
 		this.planets.push(

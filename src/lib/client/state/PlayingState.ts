@@ -1,6 +1,6 @@
-import { Entity } from '$lib/shared/entites/entity';
+import { ServerEntity } from '$lib/server/entites/entity';
 import { levels, type Game, Position, Vector, GameStatusEnum } from '$lib/client/gameTypes';
-import Sprite from '$lib/shared/entites/sprite';
+import Sprite from '$lib/server/entites/sprite';
 import { GameStateEnum } from './stateMachine';
 import type { State } from './state';
 import type InputManager from '$lib/inputManager';
@@ -13,7 +13,7 @@ export class PlayingState implements State {
 	game: Game;
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
-	landerEntity!: Entity;
+	landerEntity!: ServerEntity;
 	inputManager: InputManager;
 	music: Music;
 
@@ -325,7 +325,7 @@ export class PlayingState implements State {
 		);
 
 		let landerSize = Math.sqrt(this.canvas.height * this.canvas.width) * 0.04;
-		this.landerEntity = new Entity(
+		this.landerEntity = new ServerEntity(
 			'std',
 			{
 				render: true,

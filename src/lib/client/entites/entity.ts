@@ -1,4 +1,4 @@
-import { Vector, Position } from '../gameTypes';
+import { Vector, Position } from '../../shared/gameTypes';
 import Sprite from './sprite';
 
 export class Entity {
@@ -17,6 +17,9 @@ export class Entity {
 	color?: string;
 
 	private moveRatePerMs;
+
+	parent: Entity | undefined;
+	child: Entity | undefined;
 
 	constructor(
 		state: string,

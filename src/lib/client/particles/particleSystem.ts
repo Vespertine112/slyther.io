@@ -1,4 +1,4 @@
-import { Entity } from '$lib/shared/entites/entity';
+import { ServerEntity } from '$lib/server/entites/entity';
 import { Position, Vector } from '$lib/client/gameTypes';
 import { Random } from '$lib/shared/random';
 
@@ -6,7 +6,7 @@ import { Random } from '$lib/shared/random';
  * A generic *point* particle system
  */
 export class ParticleSystem {
-	private particles: Entity[] = [];
+	private particles: ServerEntity[] = [];
 	private canvas: HTMLCanvasElement;
 	private momentumGenCallback: () => Vector = () => new Vector(Random.nextGaussian(), Random.nextGaussian());
 	private offAfterFlag: boolean = false;
@@ -34,7 +34,7 @@ export class ParticleSystem {
 		let size = Random.nextGaussian(8, 1);
 
 		for (let index = 0; index < n; index++) {
-			let entity = new Entity(
+			let entity = new ServerEntity(
 				'std',
 				{
 					render: false,

@@ -1,10 +1,8 @@
 import { Vector, Position } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
-import { Player } from '../shared/player';
-import type { NetworkInputMessage, NetworkMessage } from '../shared/network-message';
+import { Player } from './player';
 import { Queue } from '../shared/queue';
-import { Random } from '../shared/random';
 
 interface Client {
 	socket: Socket;
@@ -133,7 +131,7 @@ export class GameServer {
 						position: newPlayer.position,
 						rotateRate: newPlayer.rotateRate,
 						speed: newPlayer.speed,
-						size: newPlayer.size
+						length: newPlayer.length
 					});
 
 					socket.emit(NetworkIds.CONNECT_OTHER, {
@@ -142,7 +140,7 @@ export class GameServer {
 						position: client.player.position,
 						rotateRate: client.player.rotateRate,
 						speed: client.player.speed,
-						size: client.player.size
+						length: client.player.length
 					});
 				}
 			}
@@ -176,7 +174,7 @@ export class GameServer {
 			socket.emit(NetworkIds.CONNECT_ACK, {
 				direction: newPlayer.direction,
 				position: newPlayer.position,
-				size: newPlayer.size,
+				length: newPlayer.length,
 				rotateRate: newPlayer.rotateRate,
 				speed: newPlayer.speed
 			});
@@ -204,7 +202,7 @@ export class GameServer {
 	}
 
 	private getValidPostitionForNewPlayer(): Position {
-		return new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1));
+		return new Position(0.5, 0.5);
 	}
 
 	private log(...s: string[]) {

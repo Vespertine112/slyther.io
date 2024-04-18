@@ -1,8 +1,6 @@
 import { Random } from '../shared/random';
-import { ServerEntity } from '../server/entites/entity';
+import { ServerEntity } from './entites/entity';
 import { Position } from '../shared/gameTypes';
-import Sprite from '../server/entites/sprite';
-import { browser } from '../../app';
 
 export class Player {
 	private head: ServerEntity;
@@ -27,17 +25,9 @@ export class Player {
 		this.direction = Random.getRandomInt(Math.PI * 2); // Random direction in radians
 
 		if (!bodyEntitySpec) {
-			if (browser) {
-				let headSprite = new Sprite('../../../static/assets/snakes/snake_green_head.png', { render: true }, {});
-				let bodySprite = new Sprite(
-					'../../../static/assets/snakes/snake_green_blob.png.png',
-					{ render: true },
-					{}
-				);
-				this.head = new ServerEntity('std', { render: true, position: this.position }, { std: headSprite });
-				let body = new ServerEntity('std', { render: true, position: this.position }, { std: bodySprite });
-				this.head.child = body;
-			}
+			this.head = new ServerEntity('std', { render: true, position: this.position });
+			let body = new ServerEntity('std', { render: true, position: this.position });
+			this.head.child = body;
 		}
 	}
 
@@ -60,6 +50,7 @@ export class Player {
 
 		// Increment direction angle
 		this.direction += this.rotateRate * elapsedTime;
+		this.head.direction += this.rotateRate * elapsedTime;
 	}
 
 	// Rotates a player's head left
@@ -68,6 +59,7 @@ export class Player {
 
 		// Decrement direction angle
 		this.direction -= this.rotateRate * elapsedTime;
+		this.head.direction -= this.rotateRate * elapsedTime;
 	}
 
 	// Player consumes 'foods' food units
