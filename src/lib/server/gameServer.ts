@@ -1,8 +1,9 @@
-import { Vector, Position } from '../shared/gameTypes';
+import { Vector, Position, Food } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
 import { Player } from './player';
 import { Queue } from '../shared/queue';
+import { Random } from '../shared/random';
 
 interface Client {
 	socket: Socket;
@@ -18,6 +19,7 @@ export class GameServer {
 	private lastUpdate: number = 0;
 	private activeClients: { [clientId: string]: Client } = {};
 	private inputQueue: Queue<any> = new Queue<any>();
+	private foodMap: { [foodId: string]: Food } = {};
 
 	constructor() {}
 
@@ -35,7 +37,7 @@ export class GameServer {
 			this.update(elapsedTime, currentTime);
 			this.updateClients(elapsedTime);
 
-			const nextInterval = Math.max(5, elapsedTime); // Ensure at least 5 ms interval. If it runs too fast we lag the server
+			const nextInterval = Math.max(1, elapsedTime); // Ensure at least 1 ms interval. If it runs too fast we loop-out the server lol
 			lastTime = currentTime;
 			setTimeout(loop, nextInterval);
 		};
@@ -46,7 +48,9 @@ export class GameServer {
 	initalizeGame(socketServer: Server) {
 		this.initalizeSocketIO(socketServer);
 
-		console.log('\x1b[0;31m[WSS]\x1b[0m Server Started');
+		this.log('Server Started');
+
+		this.initalizeFoodMap();
 
 		this.gameLoop();
 	}
@@ -90,8 +94,8 @@ export class GameServer {
 			let update = {
 				clientId: clientId,
 				lastMessageId: client.lastMessageId,
-				direction: client.player.direction,
-				position: client.player.position
+				directions: client.player.directions,
+				positions: client.player.positions
 				// updateWindow: lastUpdate
 			};
 
@@ -127,8 +131,8 @@ export class GameServer {
 				if (newPlayer.clientId !== clientId) {
 					client.socket.emit(NetworkIds.CONNECT_OTHER, {
 						clientId: newPlayer.clientId,
-						direction: newPlayer.direction,
-						position: newPlayer.position,
+						directions: newPlayer.directions,
+						positions: newPlayer.positions,
 						rotateRate: newPlayer.rotateRate,
 						speed: newPlayer.speed,
 						length: newPlayer.length
@@ -136,8 +140,8 @@ export class GameServer {
 
 					socket.emit(NetworkIds.CONNECT_OTHER, {
 						clientId: client.player.clientId,
-						direction: client.player.direction,
-						position: client.player.position,
+						directions: client.player.directions,
+						positions: client.player.positions,
 						rotateRate: client.player.rotateRate,
 						speed: client.player.speed,
 						length: client.player.length
@@ -162,8 +166,7 @@ export class GameServer {
 			this.log('Connection   :', socket.id);
 
 			// Create an entry in our list of connected clients
-			let newPlayer = new Player(socket.id);
-			newPlayer.position = this.getValidPostitionForNewPlayer();
+			let newPlayer = new Player(socket.id, this.getValidPostitionForNewPlayer());
 			newPlayer.clientId = socket.id;
 			this.activeClients[socket.id] = {
 				socket: socket,
@@ -172,11 +175,12 @@ export class GameServer {
 			};
 
 			socket.emit(NetworkIds.CONNECT_ACK, {
-				direction: newPlayer.direction,
-				position: newPlayer.position,
+				directions: newPlayer.directions,
+				positions: newPlayer.positions,
 				length: newPlayer.length,
 				rotateRate: newPlayer.rotateRate,
-				speed: newPlayer.speed
+				speed: newPlayer.speed,
+				foodMap: this.foodMap
 			});
 
 			socket.on(NetworkIds.INPUT, (data) => {
@@ -203,6 +207,19 @@ export class GameServer {
 
 	private getValidPostitionForNewPlayer(): Position {
 		return new Position(0.5, 0.5);
+	}
+
+	private initalizeFoodMap() {
+		const numFood = 2500;
+
+		for (let i = 0; i < numFood; i++) {
+			this.foodMap[`${i}`] = new Food(
+				`${i}`,
+				1,
+				5,
+				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1))
+			);
+		}
 	}
 
 	private log(...s: string[]) {

@@ -18,8 +18,8 @@ export class Entity {
 
 	private moveRatePerMs;
 
-	parent: Entity | undefined;
-	child: Entity | undefined;
+	previous: Entity | undefined;
+	next: Entity | undefined;
 
 	constructor(
 		state: string,

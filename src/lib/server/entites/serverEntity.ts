@@ -19,8 +19,8 @@ export class ServerEntity {
 
 	private moveRatePerMs;
 
-	parent: ServerEntity | undefined;
-	child: ServerEntity | undefined;
+	previous: ServerEntity | undefined;
+	next: ServerEntity | undefined;
 
 	constructor(
 		state: string,

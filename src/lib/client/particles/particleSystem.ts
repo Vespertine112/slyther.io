@@ -1,4 +1,4 @@
-import { ServerEntity } from '$lib/server/entites/entity';
+import { ServerEntity } from '$lib/server/entites/serverEntity';
 import { Position, Vector } from '$lib/client/gameTypes';
 import { Random } from '$lib/shared/random';
 

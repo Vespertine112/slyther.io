@@ -1,5 +1,6 @@
-import { Position } from '$lib/shared/gameTypes';
+import { Food, Position } from '$lib/shared/gameTypes';
 import type { Player } from '$lib/client/player';
+import type { Entity } from './entites/entity';
 
 export class Renderer {
 	ctx: CanvasRenderingContext2D;
@@ -27,36 +28,59 @@ export class Renderer {
 	 * @param player The player to render.
 	 */
 	renderPlayer(player: Player) {
-		let canvasPos = this.translateGamePositionToCanvas(player.position);
-
 		// Handles the drop-shadow on the canvas
-		this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+		this.ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
 		this.ctx.shadowBlur = 10;
 		this.ctx.shadowOffsetX = 5;
 		this.ctx.shadowOffsetY = 5;
 
-		let playerSegment = player.head;
-		let playerSegmentSprite = playerSegment.getActiveSprite();
-		if (playerSegmentSprite.readyToRender && playerSegmentSprite.render) {
-			this.ctx.save();
+		let currentEntity: Entity | undefined = player.tail;
+		for (let idx = player.positions.length - 1; idx >= 0; idx--) {
+			if (idx == 0) currentEntity = player.head;
+			if (idx > 0 && idx < player.positions.length - 1) currentEntity = player.body;
 
-			this.ctx.translate(canvasPos.x + playerSegment.width! / 2, canvasPos.y + playerSegment.height! / 2);
-			this.ctx.rotate(player.head.direction);
+			const bodySegPos = player.positions[idx];
+			const bodySegDir = player.directions[idx];
+			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);
 
-			this.ctx.drawImage(
-				playerSegmentSprite.image,
-				playerSegmentSprite.animStartX!,
-				playerSegmentSprite.animStartY!,
-				playerSegmentSprite.animCropW!,
-				playerSegmentSprite.animCropH!,
-				-playerSegment.width! / 2,
-				-playerSegment.height! / 2,
-				playerSegment.width!,
-				playerSegment.height!
-			);
+			let playerSegmentSprite = currentEntity.getActiveSprite();
+			if (playerSegmentSprite.readyToRender && playerSegmentSprite.render) {
+				this.ctx.save();
 
-			this.ctx.restore();
+				// Translate and rotate based on segment position and direction
+				this.ctx.translate(canvasPos.x + currentEntity.width! / 2, canvasPos.y + currentEntity.height! / 2);
+				this.ctx.rotate(bodySegDir);
+
+				// Draw the segment
+				this.ctx.drawImage(
+					playerSegmentSprite.image,
+					playerSegmentSprite.animStartX!,
+					playerSegmentSprite.animStartY!,
+					playerSegmentSprite.animCropW!,
+					playerSegmentSprite.animCropH!,
+					-currentEntity.width! / 2,
+					-currentEntity.height! / 2,
+					currentEntity.width!,
+					currentEntity.height!
+				);
+
+				this.ctx.restore();
+			}
 		}
+	}
+
+	/**
+	 * Renders a food item on the canvas as a circle.
+	 * @param food The food item to render.
+	 */
+	renderFood(food: Food) {
+		this.ctx.fillStyle = 'red';
+		const canvasPos = this.translateGamePositionToCanvas(food.position);
+
+		this.ctx.beginPath();
+		this.ctx.arc(canvasPos.x, canvasPos.y, food.radius, 0, Math.PI * 2);
+		this.ctx.fill();
+		this.ctx.closePath();
 	}
 
 	clear() {
@@ -69,8 +93,8 @@ export class Renderer {
 		let canvasWidthScale = this.canvas.width / scaleRatio;
 		let canvasHeightScale = this.canvas.height / scaleRatio;
 
-		let viewportLeft = this.playerSelf.position.x - this.worldCoverage / 2;
-		let viewportTop = this.playerSelf.position.y - this.worldCoverage / 2;
+		let viewportLeft = this.playerSelf.positions[0].x - this.worldCoverage / 2;
+		let viewportTop = this.playerSelf.positions[0].y - this.worldCoverage / 2;
 
 		let transPositionX = ((pos.x - viewportLeft) * this.canvas.width) / this.worldCoverage;
 		let transPositionY = ((pos.y - viewportTop) * this.canvas.height) / this.worldCoverage;

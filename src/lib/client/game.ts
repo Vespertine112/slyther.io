@@ -1,4 +1,4 @@
-import { Position, Vector } from '$lib/shared/gameTypes';
+import { Food, Position, Vector } from '$lib/shared/gameTypes';
 import type InputManager from '$lib/inputManager';
 import { CustomCommands } from '$lib/inputManager';
 import { Socket, io } from 'socket.io-client';
@@ -34,6 +34,7 @@ export class Game {
 
 	private playerSelf!: Player;
 	private playerOthers: { [clientId: string]: Player } = {};
+	private foodMap: { [foodId: string]: Food } = {};
 
 	constructor() {
 		this.socket = io();
@@ -42,10 +43,8 @@ export class Game {
 	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager) {
 		this.canvas = canvas;
 
-		this.playerSelf = new Player(this.socket.id!);
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
 		this.inputManager = inputManager;
-		this.renderer = new Renderer(canvas, this.playerSelf);
 
 		this.setupSocketListeners();
 
@@ -83,7 +82,7 @@ export class Game {
 	update(elapsedTime: number) {
 		this.canvasChangeHookForTerrain();
 
-		this.playerSelf.update(elapsedTime);
+		this.playerSelf?.update(elapsedTime);
 
 		for (let id in this.playerOthers) {
 			this.playerOthers[id].update(elapsedTime);
@@ -91,28 +90,33 @@ export class Game {
 	}
 
 	render() {
-		this.renderer.renderPlayer(this.playerSelf);
+		if (this.playerSelf) {
+			this.renderer.renderPlayer(this.playerSelf);
+		}
 
 		for (let id in this.playerOthers) {
 			let player = this.playerOthers[id];
 			this.renderer.renderPlayer(player);
 		}
-		// console.log(Math.sqrt(this.canvas.width * this.canvas.height));
+
+		for (let name in this.foodMap) {
+			this.renderer.renderFood(this.foodMap[name]);
+		}
 	}
 
 	private updatePlayerOther(data: any) {
 		if (this.playerOthers.hasOwnProperty(data.clientId)) {
 			let player = this.playerOthers[data.clientId];
 			player.updateWindow = data.updateWindow;
-			player.position = data.position;
-			player.direction = data.direction;
+			player.positions = data.positions;
+			player.directions = data.directions;
 			player.head.direction = data.direction;
 		}
 	}
 
 	private updatePlayerSelf(data) {
-		this.playerSelf.position = data.position;
-		this.playerSelf.direction = data.direction;
+		this.playerSelf.positions = data.positions;
+		this.playerSelf.directions = data.directions;
 		this.playerSelf.head.direction = data.direction;
 
 		let done = false;
@@ -237,23 +241,29 @@ export class Game {
 	}
 
 	private connectPlayerSelf(data) {
-		this.playerSelf.position = data.position;
-
-		this.playerSelf.length = data.length;
-
-		this.playerSelf.direction = data.direction;
-		this.playerSelf.speed = data.speed;
-		this.playerSelf.rotateRate = data.rotateRate;
+		this.playerSelf = new Player(
+			this.socket.id!,
+			data.positions,
+			data.directions,
+			data.length,
+			data.speed,
+			data.rotateRate
+		);
+		this.renderer = new Renderer(this.canvas, this.playerSelf);
+		this.foodMap = data.foodMap;
 	}
 
 	private connectPlayerOther(data) {
-		let player = new Player(data.clientId);
-		player.position = data.position;
-		player.direction = data.direction;
+		let player = new Player(
+			data.clientId,
+			data.positions,
+			data.directions,
+			data.length,
+			data.speed,
+			data.rotateRate
+		);
 		player.lastUpdate = performance.now();
 		player.updateWindow = 0;
-
-		player.length = data.length;
 
 		this.playerOthers[data.clientId] = player;
 	}

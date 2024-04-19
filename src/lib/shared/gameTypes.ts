@@ -63,3 +63,12 @@ export class Vector {
 		return this;
 	}
 }
+
+export class Food {
+	constructor(
+		public name: string,
+		public size: number,
+		public radius: number,
+		public position: Position
+	) {}
+}

@@ -1,16 +1,20 @@
 import { Random } from '../shared/random';
-import { Entity } from './entites/entity';
 import { Position } from '../shared/gameTypes';
+import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
+import { Queue } from '$lib/shared/queue';
 
 export class Player {
-	head!: Entity;
-
 	length: number; // Represents player size (length)
 	speed: number;
-	direction: number; // Direction in radians
-	rotateRate: number = Math.PI / 1000;
-	position: Position;
+	rotateRate: number = Math.PI / 400;
+	positions: Position[] = [];
+	directions: number[] = []; // Direction(s) in radians for body part
+	turnPointQueue: Queue<Position> = new Queue<Position>();
+
+	head!: Entity;
+	body!: Entity;
+	tail!: Entity;
 
 	reportUpdate: boolean = false;
 	lastUpdate: number = 0;
@@ -18,12 +22,21 @@ export class Player {
 
 	clientId: string;
 
-	constructor(clientId: string, bodyEntitySpec?: { head: Entity; body: Entity; tail: Entity }) {
+	constructor(
+		clientId: string,
+		pos: Position[],
+		dir: number[],
+		length: number,
+		speed: number,
+		rotateRate: number,
+		bodyEntitySpec?: { head: Entity; body: Entity; tail: Entity }
+	) {
 		this.clientId = clientId;
-		this.position = new Position(0, 0);
-		this.length = 10;
-		this.speed = 0.00001;
-		this.direction = Random.getRandomInt(Math.PI * 2); // Random direction in radians
+		this.positions = pos;
+		this.directions = dir;
+		this.length = length;
+		this.speed = speed;
+		this.rotateRate = rotateRate;
 
 		let size = 30;
 		if (!bodyEntitySpec) {
@@ -55,11 +68,19 @@ export class Player {
 			);
 			this.head = new Entity(
 				'std',
-				{ render: true, position: this.position, width: size, height: size },
+				{ render: true, position: new Position(0, 0), width: size, height: size },
 				{ std: headSprite }
 			);
-			let body = new Entity('std', { render: true, position: this.position }, { std: bodySprite });
-			this.head.child = body;
+			this.body = new Entity(
+				'std',
+				{ render: true, position: new Position(0, 0), width: size, height: size },
+				{ std: bodySprite }
+			);
+			this.tail = new Entity(
+				'std',
+				{ render: true, position: new Position(0, 0), width: size, height: size },
+				{ std: bodySprite }
+			);
 		}
 	}
 
@@ -68,12 +89,14 @@ export class Player {
 		this.reportUpdate = true;
 
 		// Calculate movement components based on direction and speed
-		const deltaX = Math.cos(this.direction) * this.speed * 2 * elapsedTime;
-		const deltaY = Math.sin(this.direction) * this.speed * 2 * elapsedTime;
+		const deltaX = Math.cos(this.directions[0]) * this.speed * 2 * elapsedTime;
+		const deltaY = Math.sin(this.directions[0]) * this.speed * 2 * elapsedTime;
 
-		// Update player position
-		this.position.x += deltaX;
-		this.position.y += deltaY;
+		// Update player positions
+		this.positions.forEach((pos) => {
+			pos.x += deltaX;
+			pos.y += deltaY;
+		});
 	}
 
 	// Rotates a player's head right
@@ -81,17 +104,20 @@ export class Player {
 		this.reportUpdate = true;
 
 		// Increment direction angle
-		this.direction += this.rotateRate * elapsedTime;
+		this.directions[0] += this.rotateRate * elapsedTime;
 		this.head.direction += this.rotateRate * elapsedTime;
+
+		this.addTurnPoint(this.positions[0]);
 	}
 
 	// Rotates a player's head left
 	rotateLeft(elapsedTime: number) {
 		this.reportUpdate = true;
 
-		// Decrement direction angle
-		this.direction -= this.rotateRate * elapsedTime;
+		this.directions[0] -= this.rotateRate * elapsedTime;
 		this.head.direction -= this.rotateRate * elapsedTime;
+
+		this.addTurnPoint(this.positions[0]);
 	}
 
 	// Player consumes 'foods' food units
@@ -103,12 +129,27 @@ export class Player {
 	update(elapsedTime: number) {
 		this.reportUpdate = true;
 
-		// Calculate movement components based on direction and speed
-		const deltaX = Math.cos(this.direction) * this.speed * elapsedTime;
-		const deltaY = Math.sin(this.direction) * this.speed * elapsedTime;
+		// Update tail position to chase the body part in front of it
+		for (let i = this.positions.length - 1; i > 0; i--) {
+			const deltaX = this.positions[i - 1].x - this.positions[i].x;
+			const deltaY = this.positions[i - 1].y - this.positions[i].y;
 
-		// Update player position
-		this.position.x += deltaX;
-		this.position.y += deltaY;
+			const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			const ratio = (this.speed * elapsedTime) / distance;
+
+			this.positions[i].x += deltaX * ratio;
+			this.positions[i].y += deltaY * ratio;
+			this.directions[i] = Math.atan2(deltaY, deltaX);
+		}
+
+		// Update head position and direction
+		const headDeltaX = Math.cos(this.directions[0]) * this.speed * elapsedTime;
+		const headDeltaY = Math.sin(this.directions[0]) * this.speed * elapsedTime;
+		this.positions[0].x += headDeltaX;
+		this.positions[0].y += headDeltaY;
+	}
+	// Method to add turn points when the player rotates
+	private addTurnPoint(point: Position) {
+		this.turnPointQueue.enqueue(point);
 	}
 }
