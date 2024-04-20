@@ -7,5 +7,6 @@ export enum NetworkIds {
 	CONNECT_OTHER = 'connect-other',
 	DISCONNECT_OTHER = 'disconnect-other',
 	UPDATE_SELF = 'update-self',
-	UPDATE_OTHER = 'update-other'
+	UPDATE_OTHER = 'update-other',
+	UPDATE_FOODMAP = 'update-foodmap'
 }

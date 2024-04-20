@@ -20,6 +20,8 @@ export class GameServer {
 	private lastUpdate: number = 0;
 	private activeClients: { [clientId: string]: Client } = {};
 	private inputQueue: Queue<any> = new Queue<any>();
+
+	/** Global food map - Players modify this during update! */
 	private foodMap: { [foodId: string]: Food } = {};
 
 	constructor() {}
@@ -79,18 +81,33 @@ export class GameServer {
 	}
 
 	update(elapsedTime: number, currentTime: number) {
+		// Perform Client update actions
 		for (let clientId in this.activeClients) {
 			this.activeClients[clientId].player.update(elapsedTime);
+			this.activeClients[clientId].player.eat(this.foodMap);
 		}
 
 		// Perform collision checks for all snakes
-
-		// Perform food collision checks (eating food)
 	}
 
 	updateClients(elapsedTime: number) {
+		// Aggregate consumed foods
+		let foodsEaten: Food[] = [];
+		for (let clientId in this.activeClients) {
+			let client = this.activeClients[clientId].player;
+			if (client.eatenFoods.length > 0) {
+				foodsEaten.concat(client.eatenFoods);
+			}
+		}
+
+		// Remove consumed foods from map;
+		for (let idx = 0; idx < foodsEaten.length; idx++) {
+			delete this.foodMap[foodsEaten[idx].name];
+		}
+
 		for (let clientId in this.activeClients) {
 			let client = this.activeClients[clientId];
+			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { foodMap: this.foodMap });
 
 			let update = {
 				clientId: clientId,
@@ -118,7 +135,11 @@ export class GameServer {
 
 			// Report any deaths to clients
 
-			// Report any eats to clients
+			// Report any eats to active
+
+			// if (client.player.reportEat) {
+			// 	clientId.socket.emit();
+			// }
 		}
 
 		for (let clientId in this.activeClients) {
@@ -217,7 +238,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		const numFood = 2500;
+		const numFood = 100;
 
 		for (let i = 0; i < numFood; i++) {
 			this.foodMap[`${i}`] = new Food(

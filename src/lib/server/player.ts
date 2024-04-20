@@ -1,5 +1,5 @@
 import { Random } from '../shared/random';
-import { Position } from '../shared/gameTypes';
+import { Food, Position } from '../shared/gameTypes';
 import { Queue } from '../shared/queue';
 
 export class Player {
@@ -11,6 +11,7 @@ export class Player {
 	directions: number[] = []; // Direction(s) in radians for each body part
 
 	reportUpdate: boolean = false;
+	eatenFoods: Food[] = [];
 	lastUpdate: number = 0;
 	updateWindow: number = 0;
 
@@ -19,9 +20,9 @@ export class Player {
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
 		this.positions.push(pos);
-		this.length = 50;
+		this.length = 5;
 		this.speed = 0.00005;
-		this.size = 1 / 50;
+		this.size = 1 / 100;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
 
 		this.createBodyParts();
@@ -68,8 +69,27 @@ export class Player {
 	}
 
 	// Player consumes 'foods' food units
-	eat(foods: number) {
-		this.reportUpdate = true;
+	eat(foodMap: { [foodId: string]: Food }) {
+		let foodsAte: Food[] = [];
+		for (let foodId in foodMap) {
+			let food = foodMap[foodId];
+
+			if (this.headCollisionCheck(food.position)) {
+				foodsAte.push(food);
+
+				this.reportUpdate = true;
+				this.length += Math.floor(food.size);
+
+				let copy = this.positions.at(-1)!;
+				this.positions.splice(-1, 0, structuredClone(copy));
+			}
+		}
+
+		foodsAte.forEach((foodId) => {
+			delete foodMap[foodId.name];
+		});
+
+		this.eatenFoods = foodsAte;
 	}
 
 	// Continue movement based on current time
@@ -106,5 +126,15 @@ export class Player {
 		const headDeltaY = Math.sin(this.directions[0]) * this.speed * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
+	}
+
+	private headCollisionCheck(pos: Position): boolean {
+		// Calculate distance between player's head and the provided point
+		const deltaX = this.positions[0].x - pos.x;
+		const deltaY = this.positions[0].y - pos.y;
+		const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+		// Check if the distance is less than or equal to the radius of the player's head
+		return distance <= this.size;
 	}
 }

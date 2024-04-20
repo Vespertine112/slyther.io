@@ -39,6 +39,8 @@
 
 			frameCounter += 1;
 
+			game = game;
+
 			requestAnimationFrame(gameLoop);
 		}
 
@@ -61,6 +63,9 @@
 {#if show}
 	<div class="mainWrapper" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
 		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
+		<div class="lowerLeft">
+			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
+		</div>
 	</div>
 {/if}
 
@@ -76,5 +81,16 @@
 	#renderCanvas {
 		max-width: 100%;
 		max-height: 100%;
+	}
+
+	.lowerLeft {
+		position: absolute;
+		display: flex;
+		flex-direction: row;
+		left: 0.5rem;
+		bottom: 0.5rem;
+		background: rgb(00, 00, 00, 0.3);
+		padding: 0.5rem;
+		border-radius: 1rem;
 	}
 </style>

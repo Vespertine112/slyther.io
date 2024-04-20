@@ -16,6 +16,7 @@ export class Player {
 	tail!: Entity;
 
 	reportUpdate: boolean = false;
+	reportEat: boolean = false;
 	lastUpdate: number = 0;
 	updateWindow: number = 0;
 
@@ -108,13 +109,32 @@ export class Player {
 	}
 
 	// Player consumes 'foods' food units
-	eat(foods: number) {
-		this.reportUpdate = true;
+	eat(foodMap: { [foodId: string]: Food }) {
+		let foodsAte: string[] = [];
+		for (let foodId in foodMap) {
+			let food = foodMap[foodId];
+
+			if (this.headCollisionCheck(food.position)) {
+				foodsAte.push(foodId);
+				// console.log('ate', this.length, food.size);
+
+				this.reportUpdate = true;
+				this.length += Math.floor(food.size);
+				let copy = this.positions.at(-1)!;
+				this.positions.splice(-1, 0, structuredClone(copy));
+			}
+		}
+
+		foodsAte.forEach((foodId) => {
+			delete foodMap[foodId];
+		});
+
+		this.reportEat = foodsAte.length > 0;
 	}
 
 	// Continue movement based on current time
 	update(elapsedTime: number) {
-		this.reportUpdate = true;
+		// this.reportUpdate = true;
 		this.moveSnakeForward(elapsedTime);
 	}
 
@@ -147,5 +167,15 @@ export class Player {
 		const headDeltaY = Math.sin(this.directions[0]) * this.speed * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
+	}
+
+	private headCollisionCheck(pos: Position): boolean {
+		// Calculate distance between player's head and the provided point
+		const deltaX = this.positions[0].x - pos.x;
+		const deltaY = this.positions[0].y - pos.y;
+		const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+		// Check if the distance is less than or equal to the radius of the player's head
+		return distance <= this.size / 2;
 	}
 }

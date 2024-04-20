@@ -10,17 +10,18 @@ export class Renderer {
 	 * The worldCoverage what fraction of the world is visible at at time
 	 * The renderer tracks where the player is and bases coord translations off that.
 	 */
-	worldCoverage: number = 1 / 5;
+	worldCoverage: number = 1;
 
 	constructor(
 		public canvas: HTMLCanvasElement,
 		public playerSelf: Player
 	) {
 		this.ctx = canvas.getContext('2d')!;
+		this.updateWorldCoverage();
 	}
 
-	updateWorldCover() {
-		this.worldCoverage;
+	updateWorldCoverage() {
+		this.worldCoverage = this.playerSelf.size * 30;
 	}
 
 	/**
@@ -94,9 +95,6 @@ export class Renderer {
 	private translateGamePositionToCanvas(pos: Position) {
 		let scaleRatio = Math.max(this.canvas.width, this.canvas.height);
 
-		let canvasWidthScale = this.canvas.width / scaleRatio;
-		let canvasHeightScale = this.canvas.height / scaleRatio;
-
 		let viewportLeft = this.playerSelf.positions[0].x - this.worldCoverage / 2;
 		let viewportTop = this.playerSelf.positions[0].y - this.worldCoverage / 2;
 
@@ -114,13 +112,8 @@ export class Renderer {
 		let scaleRatio = Math.max(this.canvas.width, this.canvas.height);
 
 		let canvasWidthScale = this.canvas.width / scaleRatio;
-		let canvasHeightScale = this.canvas.height / scaleRatio;
 
-		let viewportLeft = this.playerSelf.positions[0].x - this.worldCoverage / 2;
-		let viewportRight = this.playerSelf.positions[0].x + this.worldCoverage / 2;
-
-		let theoreticWorldLengthInPixels =
-			((viewportRight - viewportLeft) * (this.canvas.width / canvasWidthScale)) / this.worldCoverage;
+		let theoreticWorldLengthInPixels = this.canvas.width / canvasWidthScale / this.worldCoverage;
 
 		return len * theoreticWorldLengthInPixels;
 	}

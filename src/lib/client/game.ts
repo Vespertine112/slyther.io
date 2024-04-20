@@ -36,6 +36,8 @@ export class Game {
 	private playerOthers: { [clientId: string]: Player } = {};
 	private foodMap: { [foodId: string]: Food } = {};
 
+	inputLatency = 0;
+
 	constructor() {
 		this.socket = io();
 	}
@@ -75,6 +77,9 @@ export class Game {
 				case NetworkIds.UPDATE_OTHER:
 					this.updatePlayerOther(message.data);
 					break;
+				case NetworkIds.UPDATE_FOODMAP:
+					this.foodMap = message.data.foodMap;
+					break;
 			}
 		}
 	}
@@ -82,14 +87,18 @@ export class Game {
 	update(elapsedTime: number) {
 		this.canvasChangeHookForTerrain();
 
+		// this.playerSelf?.eat(this.foodMap);
 		this.playerSelf?.update(elapsedTime);
 
 		for (let id in this.playerOthers) {
+			this.playerOthers[id].eat(this.foodMap);
 			this.playerOthers[id].update(elapsedTime);
 		}
 	}
 
 	render() {
+		this.renderer?.updateWorldCoverage();
+
 		for (let name in this.foodMap) {
 			this.renderer.renderFood(this.foodMap[name]);
 		}
@@ -132,6 +141,12 @@ export class Game {
 		}
 
 		let memory = new Queue<any>();
+
+		if (!this.messageHistory.empty) {
+			this.inputLatency = performance.now() - this.messageHistory.front?.currentTime;
+		}
+		// console.log(this.inputLatency);
+
 		while (!this.messageHistory.empty) {
 			let message = this.messageHistory.dequeue();
 			switch (message.type) {
@@ -152,38 +167,21 @@ export class Game {
 	}
 
 	setupSocketListeners() {
-		this.socket.on(NetworkIds.CONNECT_ACK, (data) => {
-			this.networkQueue.enqueue({
-				type: NetworkIds.CONNECT_ACK,
-				data: data
-			});
-		});
+		let standardListeners = [
+			NetworkIds.CONNECT_ACK,
+			NetworkIds.CONNECT_OTHER,
+			NetworkIds.DISCONNECT_OTHER,
+			NetworkIds.UPDATE_SELF,
+			NetworkIds.UPDATE_OTHER,
+			NetworkIds.UPDATE_FOODMAP
+		];
 
-		this.socket.on(NetworkIds.CONNECT_OTHER, (data) => {
-			this.networkQueue.enqueue({
-				type: NetworkIds.CONNECT_OTHER,
-				data: data
-			});
-		});
-
-		this.socket.on(NetworkIds.DISCONNECT_OTHER, (data) => {
-			this.networkQueue.enqueue({
-				type: NetworkIds.DISCONNECT_OTHER,
-				data: data
-			});
-		});
-
-		this.socket.on(NetworkIds.UPDATE_SELF, (data) => {
-			this.networkQueue.enqueue({
-				type: NetworkIds.UPDATE_SELF,
-				data: data
-			});
-		});
-
-		this.socket.on(NetworkIds.UPDATE_OTHER, (data) => {
-			this.networkQueue.enqueue({
-				type: NetworkIds.UPDATE_OTHER,
-				data: data
+		standardListeners.forEach((networkReq) => {
+			this.socket.on(networkReq, (data) => {
+				this.networkQueue.enqueue({
+					type: networkReq,
+					data: data
+				});
 			});
 		});
 	}
@@ -193,7 +191,8 @@ export class Game {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
-				type: NetworkIds.INPUT_ROTATE_RIGHT
+				type: NetworkIds.INPUT_ROTATE_RIGHT,
+				currentTime: performance.now()
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
@@ -203,7 +202,8 @@ export class Game {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
-				type: NetworkIds.INPUT_ROTATE_LEFT
+				type: NetworkIds.INPUT_ROTATE_LEFT,
+				currentTime: performance.now()
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
@@ -213,7 +213,8 @@ export class Game {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
-				type: NetworkIds.INPUT_BOOST
+				type: NetworkIds.INPUT_BOOST,
+				currentTime: performance.now()
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
