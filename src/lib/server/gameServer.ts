@@ -100,7 +100,7 @@ export class GameServer {
 			};
 
 			if (client.player.reportUpdate) {
-				client.socket.emit(NetworkIds.UPDATE_SELF, update);
+				// client.socket.emit(NetworkIds.UPDATE_SELF, update);
 
 				//
 				// Notify all other connected clients about every

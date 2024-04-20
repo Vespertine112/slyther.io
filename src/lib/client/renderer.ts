@@ -41,6 +41,7 @@ export class Renderer {
 
 			const bodySegPos = player.positions[idx];
 			const bodySegDir = player.directions[idx];
+
 			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);
 
 			let playerSegmentSprite = currentEntity.getActiveSprite();

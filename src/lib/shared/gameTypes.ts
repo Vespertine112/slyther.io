@@ -4,7 +4,8 @@
 export class Position {
 	x: number;
 	y: number;
-	parent: Position | undefined;
+	prev: Position | undefined;
+	next: Position | undefined;
 
 	constructor(x: number, y: number) {
 		this.x = x;

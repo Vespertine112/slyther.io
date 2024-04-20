@@ -193,6 +193,7 @@ export class Game {
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
+			this.playerSelf.rotateRight(elapsedTime);
 		});
 		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: false }, (elapsedTime) => {
 			let message = {
@@ -202,6 +203,7 @@ export class Game {
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
+			this.playerSelf.rotateLeft(elapsedTime);
 		});
 		this.inputManager.registerCommand([CustomCommands.Boost], { fireOnce: false }, (elapsedTime) => {
 			let message = {
@@ -211,6 +213,7 @@ export class Game {
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
+			this.playerSelf.boost(elapsedTime);
 		});
 	}
 
@@ -270,14 +273,5 @@ export class Game {
 
 	private disconnectPlayerOther(data) {
 		delete this.playerOthers[data.clientId];
-	}
-
-	private generateThrustVector(angleInDegrees: number, magnitude: number): Vector {
-		const angleInRadians = (angleInDegrees * Math.PI) / 180;
-		const thrustX = -magnitude * Math.cos(angleInRadians);
-		const thrustY = magnitude * Math.sin(angleInRadians);
-		const angledVector = new Vector(thrustY, thrustX);
-
-		return angledVector;
 	}
 }

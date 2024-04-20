@@ -5,10 +5,9 @@ import { Queue } from '../shared/queue';
 export class Player {
 	length: number; // Represents player size (length)
 	speed: number;
-	rotateRate: number = Math.PI / 400;
+	rotateRate: number = Math.PI / 300;
 	positions: Position[] = [];
 	directions: number[] = []; // Direction(s) in radians for each body part
-	turnPointQueue: Queue<Position> = new Queue<Position>();
 
 	reportUpdate: boolean = false;
 	lastUpdate: number = 0;
@@ -19,7 +18,7 @@ export class Player {
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
 		this.positions.push(pos);
-		this.length = 10;
+		this.length = 50;
 		this.speed = 0.00005;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
 
@@ -36,31 +35,18 @@ export class Player {
 		let x = this.positions[0].x;
 		let y = this.positions[0].y;
 
-		for (let i = 1; i < this.length - 1; i++) {
+		for (let i = 1; i < this.length; i++) {
 			x -= offsetX;
 			y -= offsetY;
-			this.positions.push(new Position(x, y));
+			let newPos = new Position(x, y);
+			newPos.prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
+			this.positions.push(newPos);
 		}
-
-		// Update position for tail
-		x -= offsetX;
-		y -= offsetY;
-		this.positions.push(new Position(x, y));
 	}
 
-	// Moves a player based on elapsed time
 	boost(elapsedTime: number) {
 		this.reportUpdate = true;
-
-		// Calculate movement components based on direction and speed
-		const deltaX = Math.cos(this.directions[0]) * this.speed * 2 * elapsedTime;
-		const deltaY = Math.sin(this.directions[0]) * this.speed * 2 * elapsedTime;
-
-		// Update player positions
-		this.positions.forEach((pos) => {
-			pos.x += deltaX;
-			pos.y += deltaY;
-		});
+		this.moveSnakeForward(elapsedTime);
 	}
 
 	// Rotates a player's head right
@@ -69,7 +55,6 @@ export class Player {
 
 		// Increment direction angle
 		this.directions[0] += this.rotateRate * elapsedTime;
-		this.addTurnPoint(this.positions[0]);
 	}
 
 	// Rotates a player's head left
@@ -78,7 +63,6 @@ export class Player {
 
 		// Decrement direction angle
 		this.directions[0] -= this.rotateRate * elapsedTime;
-		this.addTurnPoint(this.positions[0]);
 	}
 
 	// Player consumes 'foods' food units
@@ -88,19 +72,31 @@ export class Player {
 
 	// Continue movement based on current time
 	update(elapsedTime: number) {
-		this.reportUpdate = true;
+		this.moveSnakeForward(elapsedTime);
+	}
 
+	private moveSnakeForward(elapsedTime: number) {
 		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
-			const deltaX = this.positions[i - 1].x - this.positions[i].x;
-			const deltaY = this.positions[i - 1].y - this.positions[i].y;
+			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
+			const deltaY = this.positions[i].prev!.y - this.positions[i].y;
 
-			const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			const absDx = Math.abs(deltaX);
+			const absDy = Math.abs(deltaY);
+
+			const distance = Math.sqrt(absDx * absDx + absDy * absDy);
 			const ratio = (this.speed * elapsedTime) / distance;
 
-			this.positions[i].x += deltaX * ratio;
-			this.positions[i].y += deltaY * ratio;
-			this.directions[i] = Math.atan2(deltaY, deltaX);
+			if (distance > 0) {
+				this.positions[i].x += deltaX * ratio;
+				this.positions[i].y += deltaY * ratio;
+				this.directions[i] = Math.atan2(deltaY, deltaX);
+			}
+
+			// Check if the body part has reached its target position
+			if (distance <= this.speed * elapsedTime) {
+				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
+			}
 		}
 
 		// Update head position and direction
@@ -108,10 +104,5 @@ export class Player {
 		const headDeltaY = Math.sin(this.directions[0]) * this.speed * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
-	}
-
-	// Method to add turn points when the player rotates
-	private addTurnPoint(point: Position) {
-		this.turnPointQueue.enqueue(point);
 	}
 }
