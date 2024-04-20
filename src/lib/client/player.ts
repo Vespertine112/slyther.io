@@ -4,7 +4,8 @@ import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
 
 export class Player {
-	length: number; // Represents player size (length)
+	length: number;
+	size: number;
 	speed: number;
 	rotateRate: number = Math.PI / 400;
 	positions: Position[] = [];
@@ -27,6 +28,7 @@ export class Player {
 		length: number,
 		speed: number,
 		rotateRate: number,
+		size: number,
 		bodyEntitySpec?: { head: Entity; body: Entity; tail: Entity }
 	) {
 		this.clientId = clientId;
@@ -35,8 +37,9 @@ export class Player {
 		this.length = length;
 		this.speed = speed;
 		this.rotateRate = rotateRate;
+		this.size = size;
 
-		let size = 30;
+		let renderSize = 30;
 		if (!bodyEntitySpec) {
 			let headSprite = new Sprite(
 				'assets/snakes/snake_green_head.png',
@@ -66,17 +69,17 @@ export class Player {
 			);
 			this.head = new Entity(
 				'std',
-				{ render: true, position: new Position(0, 0), width: size, height: size },
+				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
 				{ std: headSprite }
 			);
 			this.body = new Entity(
 				'std',
-				{ render: true, position: new Position(0, 0), width: size, height: size },
+				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
 				{ std: bodySprite }
 			);
 			this.tail = new Entity(
 				'std',
-				{ render: true, position: new Position(0, 0), width: size, height: size },
+				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
 				{ std: bodySprite }
 			);
 		}

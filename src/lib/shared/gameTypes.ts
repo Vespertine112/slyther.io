@@ -66,10 +66,13 @@ export class Vector {
 }
 
 export class Food {
+	radius: number;
+
 	constructor(
 		public name: string,
 		public size: number,
-		public radius: number,
 		public position: Position
-	) {}
+	) {
+		this.radius = size / 500;
+	}
 }

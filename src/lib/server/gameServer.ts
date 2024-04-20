@@ -4,6 +4,7 @@ import { NetworkIds } from '../shared/network-ids';
 import { Player } from './player';
 import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
+import { sineIn } from 'svelte/easing';
 
 interface Client {
 	socket: Socket;
@@ -95,12 +96,15 @@ export class GameServer {
 				clientId: clientId,
 				lastMessageId: client.lastMessageId,
 				directions: client.player.directions,
-				positions: client.player.positions
+				positions: client.player.positions,
+				speed: client.player.speed,
+				length: client.player.length,
+				size: client.player.size
 				// updateWindow: lastUpdate
 			};
 
 			if (client.player.reportUpdate) {
-				// client.socket.emit(NetworkIds.UPDATE_SELF, update);
+				client.socket.emit(NetworkIds.UPDATE_SELF, update);
 
 				//
 				// Notify all other connected clients about every
@@ -135,7 +139,8 @@ export class GameServer {
 						positions: newPlayer.positions,
 						rotateRate: newPlayer.rotateRate,
 						speed: newPlayer.speed,
-						length: newPlayer.length
+						length: newPlayer.length,
+						size: newPlayer.size
 					});
 
 					socket.emit(NetworkIds.CONNECT_OTHER, {
@@ -144,7 +149,8 @@ export class GameServer {
 						positions: client.player.positions,
 						rotateRate: client.player.rotateRate,
 						speed: client.player.speed,
-						length: client.player.length
+						length: client.player.length,
+						size: client.player.size
 					});
 				}
 			}
@@ -178,6 +184,7 @@ export class GameServer {
 				directions: newPlayer.directions,
 				positions: newPlayer.positions,
 				length: newPlayer.length,
+				size: newPlayer.size,
 				rotateRate: newPlayer.rotateRate,
 				speed: newPlayer.speed,
 				foodMap: this.foodMap
@@ -215,8 +222,7 @@ export class GameServer {
 		for (let i = 0; i < numFood; i++) {
 			this.foodMap[`${i}`] = new Food(
 				`${i}`,
-				1,
-				5,
+				Random.nextRandomBetween(1, 1.2),
 				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1))
 			);
 		}

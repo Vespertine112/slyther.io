@@ -3,7 +3,8 @@ import { Position } from '../shared/gameTypes';
 import { Queue } from '../shared/queue';
 
 export class Player {
-	length: number; // Represents player size (length)
+	length: number; // Represents player length
+	size: number; // Player size (length / width for body parts)
 	speed: number;
 	rotateRate: number = Math.PI / 300;
 	positions: Position[] = [];
@@ -20,6 +21,7 @@ export class Player {
 		this.positions.push(pos);
 		this.length = 50;
 		this.speed = 0.00005;
+		this.size = 1 / 50;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
 
 		this.createBodyParts();

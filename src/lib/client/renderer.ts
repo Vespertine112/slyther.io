@@ -34,6 +34,9 @@ export class Renderer {
 		this.ctx.shadowOffsetX = 5;
 		this.ctx.shadowOffsetY = 5;
 
+		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
+		// console.log(adjustedPlayerSize);
+
 		let currentEntity: Entity | undefined = player.tail;
 		for (let idx = player.positions.length - 1; idx >= 0; idx--) {
 			if (idx == 0) currentEntity = player.head;
@@ -59,10 +62,10 @@ export class Renderer {
 					playerSegmentSprite.animStartY!,
 					playerSegmentSprite.animCropW!,
 					playerSegmentSprite.animCropH!,
-					-currentEntity.width! / 2,
-					-currentEntity.height! / 2,
-					currentEntity.width!,
-					currentEntity.height!
+					-adjustedPlayerSize / 2,
+					-adjustedPlayerSize / 2,
+					adjustedPlayerSize!,
+					adjustedPlayerSize!
 				);
 
 				this.ctx.restore();
@@ -79,7 +82,7 @@ export class Renderer {
 		const canvasPos = this.translateGamePositionToCanvas(food.position);
 
 		this.ctx.beginPath();
-		this.ctx.arc(canvasPos.x, canvasPos.y, food.radius, 0, Math.PI * 2);
+		this.ctx.arc(canvasPos.x, canvasPos.y, this.convertWorldLengthToPixels(food.radius), 0, Math.PI * 2);
 		this.ctx.fill();
 		this.ctx.closePath();
 	}
@@ -101,5 +104,24 @@ export class Renderer {
 		let transPositionY = ((pos.y - viewportTop) * this.canvas.height) / this.worldCoverage;
 
 		return new Position(transPositionX, transPositionY);
+	}
+
+	/**
+	 * Convert a world length to pixels for rendering
+	 * Assumes that the len < 1
+	 */
+	private convertWorldLengthToPixels(len: number) {
+		let scaleRatio = Math.max(this.canvas.width, this.canvas.height);
+
+		let canvasWidthScale = this.canvas.width / scaleRatio;
+		let canvasHeightScale = this.canvas.height / scaleRatio;
+
+		let viewportLeft = this.playerSelf.positions[0].x - this.worldCoverage / 2;
+		let viewportRight = this.playerSelf.positions[0].x + this.worldCoverage / 2;
+
+		let theoreticWorldLengthInPixels =
+			((viewportRight - viewportLeft) * (this.canvas.width / canvasWidthScale)) / this.worldCoverage;
+
+		return len * theoreticWorldLengthInPixels;
 	}
 }

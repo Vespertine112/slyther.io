@@ -90,8 +90,8 @@ export class Game {
 	}
 
 	render() {
-		if (this.playerSelf) {
-			this.renderer.renderPlayer(this.playerSelf);
+		for (let name in this.foodMap) {
+			this.renderer.renderFood(this.foodMap[name]);
 		}
 
 		for (let id in this.playerOthers) {
@@ -99,8 +99,8 @@ export class Game {
 			this.renderer.renderPlayer(player);
 		}
 
-		for (let name in this.foodMap) {
-			this.renderer.renderFood(this.foodMap[name]);
+		if (this.playerSelf) {
+			this.renderer.renderPlayer(this.playerSelf);
 		}
 	}
 
@@ -110,6 +110,8 @@ export class Game {
 			player.updateWindow = data.updateWindow;
 			player.positions = data.positions;
 			player.directions = data.directions;
+			player.length = data.length;
+			player.size = data.size;
 			player.head.direction = data.direction;
 		}
 	}
@@ -117,6 +119,8 @@ export class Game {
 	private updatePlayerSelf(data) {
 		this.playerSelf.positions = data.positions;
 		this.playerSelf.directions = data.directions;
+		this.playerSelf.size = data.size;
+		this.playerSelf.length = data.length;
 		this.playerSelf.head.direction = data.direction;
 
 		let done = false;
@@ -250,7 +254,8 @@ export class Game {
 			data.directions,
 			data.length,
 			data.speed,
-			data.rotateRate
+			data.rotateRate,
+			data.size
 		);
 		this.renderer = new Renderer(this.canvas, this.playerSelf);
 		this.foodMap = data.foodMap;
@@ -263,7 +268,8 @@ export class Game {
 			data.directions,
 			data.length,
 			data.speed,
-			data.rotateRate
+			data.rotateRate,
+			data.size
 		);
 		player.lastUpdate = performance.now();
 		player.updateWindow = 0;
