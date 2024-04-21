@@ -16,7 +16,7 @@ export class Renderer {
 	 * tileWorldCoverage determines how much of the
 	 * a tile should covers (world units, i.e. < 1)
 	 */
-	private tileWorldCoverage: number = 1 / 20;
+	private tileWorldCoverage: number = 1 / 30;
 
 	/**
 	 * The viewport only covers a square of the overall world.
@@ -249,7 +249,7 @@ export class Renderer {
 
 	private initBackgroundTileEntities() {
 		let backgroundSprite = new Sprite(
-			'assets/backgrounds/Leaf_tile.png',
+			'assets/backgrounds/Sand_tile.png',
 			{ render: true },
 			{
 				animate: false,
@@ -269,7 +269,7 @@ export class Renderer {
 		);
 
 		let edgeSprite = new Sprite(
-			'assets/backgrounds/Dirt_tile.png',
+			'assets/backgrounds/Lava_tile.png',
 			{ render: true },
 			{
 				animate: false,
