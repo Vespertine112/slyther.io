@@ -72,8 +72,6 @@ export class Game {
 					this.disconnectPlayerOther(message.data);
 					break;
 				case NetworkIds.UPDATE_SELF:
-					console.log('update self');
-
 					this.updatePlayerSelf(message.data);
 					break;
 				case NetworkIds.UPDATE_OTHER:
@@ -100,6 +98,8 @@ export class Game {
 
 	render() {
 		this.renderer?.updateWorldCoverage();
+
+		this.renderer?.renderBackgroundTiles();
 
 		for (let name in this.foodMap) {
 			this.renderer.renderFood(this.foodMap[name]);

@@ -1,16 +1,30 @@
 import { Food, Position } from '$lib/shared/gameTypes';
 import type { Player } from '$lib/client/player';
-import type { Entity } from './entites/entity';
+import { Entity } from './entites/entity';
+import Sprite from './entites/sprite';
 
 export class Renderer {
 	ctx: CanvasRenderingContext2D;
 
 	/**
+	 * Tile Entites are the background of the world.
+	 */
+	private backgroundTile!: Entity;
+	private edgeTile!: Entity;
+
+	/*
+	 * tileWorldCoverage determines how much of the
+	 * a tile should covers (world units, i.e. < 1)
+	 */
+	private tileWorldCoverage: number = 1 / 20;
+
+	/**
 	 * The viewport only covers a square of the overall world.
 	 * The worldCoverage what fraction of the world is visible at at time
 	 * The renderer tracks where the player is and bases coord translations off that.
+	 * THIS WILL BE DYNAMICALLY SET BASED ON PLAYER SIZE
 	 */
-	worldCoverage: number = 1;
+	worldCoverage: number = 1 / 5;
 
 	constructor(
 		public canvas: HTMLCanvasElement,
@@ -18,10 +32,52 @@ export class Renderer {
 	) {
 		this.ctx = canvas.getContext('2d')!;
 		this.updateWorldCoverage();
+		this.initBackgroundTileEntities();
 	}
 
 	updateWorldCoverage() {
 		this.worldCoverage = this.playerSelf.size * 30;
+	}
+
+	/**
+	 * Optimized background tile rendering
+	 * Only renders tiles which are within viewport
+	 */
+	renderBackgroundTiles() {
+		let tileDimNum = 1 / this.tileWorldCoverage;
+		this.ctx.save();
+		this.ctx.imageSmoothingEnabled = false;
+
+		for (let x = 0; x < tileDimNum; x++) {
+			for (let y = 0; y < tileDimNum; y++) {
+				const tileTopLeftPos = new Position(x * this.tileWorldCoverage, y * this.tileWorldCoverage);
+				const tileTopLeft = this.translateGamePositionToCanvas(tileTopLeftPos);
+				const tileDimension = this.convertWorldLengthToPixels(this.tileWorldCoverage);
+
+				let backgroundSprite = this.backgroundTile.getActiveSprite();
+
+				if (x == 0 || x == tileDimNum - 1 || y == 0 || y == tileDimNum - 1) {
+					backgroundSprite = this.edgeTile.getActiveSprite();
+				}
+
+				if (
+					this.viewportRectangleCollisionCheck(tileTopLeftPos, this.tileWorldCoverage, this.tileWorldCoverage)
+				) {
+					this.ctx.drawImage(
+						backgroundSprite.image,
+						backgroundSprite.animStartX!,
+						backgroundSprite.animStartY!,
+						backgroundSprite.animCropW!,
+						backgroundSprite.animCropH!,
+						tileTopLeft.x,
+						tileTopLeft.y,
+						tileDimension,
+						tileDimension
+					);
+				}
+			}
+		}
+		this.ctx.restore();
 	}
 
 	/**
@@ -78,9 +134,9 @@ export class Renderer {
 	 * @param food The food item to render.
 	 */
 	renderFood(food: Food) {
-		// if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
-		// 	return; // Skip rendering if food is outside the viewport
-		// }
+		if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
+			return; // Skip rendering if food is outside the viewport
+		}
 
 		this.ctx.fillStyle = 'red';
 		const canvasPos = this.translateGamePositionToCanvas(food.position);
@@ -101,11 +157,16 @@ export class Renderer {
 		const deltaY = pos.y - this.playerSelf.positions[0].y;
 		const distanceSquared = deltaX * deltaX + deltaY * deltaY;
 		const radiusSquared = radius * radius;
+		const viewportRadiusSquared = this.worldCoverage ** 2;
 
 		// Check if the circle is within the viewport by comparing the squared distances
-		return distanceSquared + radius <= (this.worldCoverage / 2) ** 2;
+		return distanceSquared - radiusSquared <= viewportRadiusSquared;
 	}
 
+	/**
+	 * Check for viewport Collision (rectangular)
+	 * All positions & sizing are expected in respect world
+	 */
 	private viewportRectangleCollisionCheck(topLeft: Position, width: number, height: number): boolean {
 		const playerX = this.playerSelf.positions[0].x;
 		const playerY = this.playerSelf.positions[0].y;
@@ -184,5 +245,47 @@ export class Renderer {
 		let theoreticWorldLengthInPixels = this.canvas.width / canvasWidthScale / this.worldCoverage;
 
 		return len * theoreticWorldLengthInPixels;
+	}
+
+	private initBackgroundTileEntities() {
+		let backgroundSprite = new Sprite(
+			'assets/backgrounds/Leaf_tile.png',
+			{ render: true },
+			{
+				animate: false,
+				animStartX: 0,
+				animStartY: 0,
+				animCropH: 16,
+				animCropW: 16,
+				sheetCols: 1,
+				sheetRows: 1
+			}
+		);
+
+		this.backgroundTile = new Entity(
+			'std',
+			{ render: true, position: new Position(0, 0), width: 1, height: 1 },
+			{ std: backgroundSprite }
+		);
+
+		let edgeSprite = new Sprite(
+			'assets/backgrounds/Dirt_tile.png',
+			{ render: true },
+			{
+				animate: false,
+				animStartX: 0,
+				animStartY: 0,
+				animCropH: 16,
+				animCropW: 16,
+				sheetCols: 1,
+				sheetRows: 1
+			}
+		);
+
+		this.edgeTile = new Entity(
+			'std',
+			{ render: true, position: new Position(0, 0), width: 1, height: 1 },
+			{ std: edgeSprite }
+		);
 	}
 }
