@@ -2,9 +2,11 @@ import { Food, Position } from '$lib/shared/gameTypes';
 import type { ClientPlayer } from '$lib/client/clientPlayer';
 import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
+import { foodFiles } from '$lib/shared/misc';
 
 export class Renderer {
 	ctx: CanvasRenderingContext2D;
+	private foodEntities: { [foodName: string]: Entity } = {};
 
 	/**
 	 * Tile Entites are the background of the world.
@@ -33,6 +35,7 @@ export class Renderer {
 		this.ctx = canvas.getContext('2d')!;
 		this.updateWorldCoverage();
 		this.initBackgroundTileEntities();
+		this.initFoodEntities();
 	}
 
 	updateWorldCoverage() {
@@ -135,34 +138,39 @@ export class Renderer {
 	}
 
 	/**
-	 * Renders a food item on the canvas as a circle.
+	 * Renders a food item on the canvas.
 	 * @param food The food item to render.
 	 */
 	renderFood(food: Food) {
+		this.ctx.save();
+		this.ctx.imageSmoothingEnabled = false;
+
+		const foodEntity = this.foodEntities[food.assetName];
 		if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
-			return; // Skip rendering if food is outside the viewport
+			return;
 		}
 
 		const canvasPos = this.translateGamePositionToCanvas(food.position);
+		const foodSprite = foodEntity.getActiveSprite();
+		const foodSize = this.convertWorldLengthToPixels(food.radius);
 
-		// Define radial gradient colors
-		const gradient = this.ctx.createRadialGradient(
-			canvasPos.x,
-			canvasPos.y,
-			0, // Inner circle position (same as food)
-			canvasPos.x,
-			canvasPos.y,
-			this.convertWorldLengthToPixels(food.radius * 2) // Outer circle position (extended by radius)
-		);
-		gradient.addColorStop(0, 'red'); // Start color
-		gradient.addColorStop(1, 'transparent'); // End color
+		// Check if the sprite is ready to render
+		if (foodSprite.readyToRender && foodSprite.render) {
+			// Draw the food entity
+			this.ctx.drawImage(
+				foodSprite.image,
+				foodSprite.animStartX!,
+				foodSprite.animStartY!,
+				foodSprite.animCropW!,
+				foodSprite.animCropH!,
+				canvasPos.x!,
+				canvasPos.y!,
+				foodSize!,
+				foodSize!
+			);
+		}
 
-		// Fill food circle with radial gradient
-		this.ctx.fillStyle = gradient;
-		this.ctx.beginPath();
-		this.ctx.arc(canvasPos.x, canvasPos.y, this.convertWorldLengthToPixels(food.radius), 0, Math.PI * 2);
-		this.ctx.fill();
-		this.ctx.closePath();
+		this.ctx.restore();
 	}
 
 	clear() {
@@ -305,5 +313,34 @@ export class Renderer {
 			{ render: true, position: new Position(0, 0), width: 1, height: 1 },
 			{ std: edgeSprite }
 		);
+	}
+
+	private initFoodEntities() {
+		// Loop through foodFiles array to create sprites and entities for each food item
+		for (const food of foodFiles) {
+			const foodSprite = new Sprite(
+				`assets/foods/${food.fileName}`, // Assuming food images are stored in 'assets/foods' directory
+				{ render: true },
+				{
+					animate: false,
+					animStartX: 0,
+					animStartY: 0,
+					animCropH: 16,
+					animCropW: 16,
+					sheetCols: 1,
+					sheetRows: 1
+				}
+			);
+
+			const foodEntity = new Entity(
+				'std',
+				{ render: true, position: new Position(0, 0), width: 1, height: 1 }, // Adjust position, width, and height as needed
+				{ std: foodSprite }
+			);
+
+			// Store the food entity in a property indexed by the name of the food
+			// Assuming you have a property named 'foodEntities' to store the entities
+			this.foodEntities[food.name] = foodEntity;
+		}
 	}
 }

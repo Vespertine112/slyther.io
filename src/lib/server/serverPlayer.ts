@@ -8,7 +8,7 @@ export class ServerPlayer extends Player {
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
-		this.length = 50;
+		this.length = 5;
 		this.speed = 0.00008;
 		this.size = 1 / 100;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians

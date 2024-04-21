@@ -65,13 +65,21 @@ export class Vector {
 	}
 }
 
+export enum FoodType {
+	REGULAR,
+	INVINCIBILITY,
+	SIZEUP,
+	SPEEDUP
+}
 export class Food {
 	radius: number;
 
 	constructor(
 		public name: string,
+		public assetName: string,
 		public size: number,
-		public position: Position
+		public position: Position,
+		public type: FoodType
 	) {
 		this.radius = size / 500;
 	}

@@ -1,4 +1,4 @@
-import { Vector, Position, Food } from '../shared/gameTypes';
+import { Vector, Position, Food, FoodType } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
 import { ServerPlayer } from './serverPlayer';
@@ -6,6 +6,7 @@ import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
 import { sineIn } from 'svelte/easing';
 import { Player, PlayerStates } from '../shared/player';
+import { foodFiles } from '../shared/misc';
 
 interface Client {
 	socket: Socket;
@@ -24,6 +25,8 @@ export class GameServer {
 
 	/** Global food map - Players modify this during update! */
 	private foodMap: { [foodId: string]: Food } = {};
+	private maximumFood = 2000;
+	private foodCounter = 0;
 
 	constructor() {}
 
@@ -88,6 +91,11 @@ export class GameServer {
 	}
 
 	update(elapsedTime: number, currentTime: number) {
+		// Add food to map
+		if (Object.entries(this.foodMap).length < this.maximumFood) {
+			this.addFoodToMap(1);
+		}
+
 		// Perform Client update actions
 		for (let clientId in this.activeClients) {
 			this.activeClients[clientId].player.update(elapsedTime);
@@ -100,21 +108,34 @@ export class GameServer {
 			if (player.state != PlayerStates.ALIVE) continue;
 			let hasCollided = false;
 
-			for (let otherClientId in this.activeClients) {
-				let otherPlayer = this.activeClients[otherClientId].player;
-				if (clientId == otherClientId || otherPlayer.state != PlayerStates.ALIVE) continue;
+			// Check player in world boundaries
+			let playerHeadPos = player.positions[0];
+			if (playerHeadPos.x < 0 || playerHeadPos.x > 1 || playerHeadPos.y < 0 || playerHeadPos.y > 1) {
+				player.state = PlayerStates.DEAD;
+				hasCollided = true;
+			}
 
-				for (let i = 0; i < otherPlayer.positions.length; i++) {
-					const bodyPart = otherPlayer.positions[i];
-					if (player.headCollisionCheck(bodyPart)) {
-						this.log(`[Player Died] ${clientId}`);
-						player.state = PlayerStates.DEAD;
-						hasCollided = true;
-						break;
+			// Check against other snake bodies
+			if (!hasCollided) {
+				for (let otherClientId in this.activeClients) {
+					let otherPlayer = this.activeClients[otherClientId].player;
+					if (clientId == otherClientId || otherPlayer.state != PlayerStates.ALIVE) continue;
+
+					for (let i = 0; i < otherPlayer.positions.length; i++) {
+						const bodyPart = otherPlayer.positions[i];
+						if (player.headCollisionCheck(bodyPart)) {
+							player.state = PlayerStates.DEAD;
+							hasCollided = true;
+							break;
+						}
 					}
-				}
 
-				if (hasCollided) break;
+					if (hasCollided) break;
+				}
+			}
+
+			if (hasCollided) {
+				this.log(`[Player Died] ${clientId}`);
 			}
 		}
 	}
@@ -277,13 +298,24 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		const numFood = 1000;
+		this.addFoodToMap(1000);
+	}
+
+	private addFoodToMap(numFood: number) {
+		let names: string[] = [];
+		for (let { name } of foodFiles) {
+			names.push(name);
+		}
 
 		for (let i = 0; i < numFood; i++) {
-			this.foodMap[`${i}`] = new Food(
-				`${i}`,
-				Random.nextRandomBetween(1, 1.2),
-				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1))
+			let randomName = names[Math.floor(names.length * Math.random())];
+			this.foodCounter++;
+			this.foodMap[`${this.foodCounter}`] = new Food(
+				`${this.foodCounter}`,
+				randomName,
+				Random.nextRandomBetween(3, 4),
+				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1)),
+				FoodType.REGULAR
 			);
 		}
 	}
