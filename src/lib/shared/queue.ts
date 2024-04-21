@@ -20,4 +20,8 @@ export class Queue<T> {
 	get empty(): boolean {
 		return this.data.length === 0;
 	}
+
+	get length(): number {
+		return this.data.length;
+	}
 }

@@ -32,6 +32,7 @@ export class GameServer {
 
 	gameLoop() {
 		let lastTime = performance.now();
+		let netStack = 0;
 		let quit = false;
 
 		const loop = () => {
@@ -40,10 +41,12 @@ export class GameServer {
 			const currentTime = performance.now();
 			const elapsedTime = currentTime - lastTime;
 
-			if (elapsedTime > 50) {
+			if (elapsedTime > 1) {
 				this.log(`[Warning] Frame Time: ${Math.trunc(elapsedTime)}`);
+				this.log(`Previous Netstack: ${netStack}`);
 			}
 
+			netStack = JSON.stringify(this.inputQueue.length);
 			this.processInput(elapsedTime);
 			this.update(elapsedTime, currentTime);
 			this.updateClients(elapsedTime);
