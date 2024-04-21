@@ -6,6 +6,7 @@ import { NetworkIds } from '$lib/shared/network-ids';
 import { Queue } from '$lib/shared/queue';
 import { ClientPlayer } from '$lib/client/clientPlayer';
 import { Renderer } from './renderer';
+import { PlayerStates } from '$lib/shared/player';
 
 export enum GameStatusEnum {
 	Playing,
@@ -39,7 +40,8 @@ export class Game {
 	inputLatency = 0;
 
 	constructor() {
-		this.socket = io();
+		this.socket = io({ autoConnect: false });
+		this.socket.connect();
 	}
 
 	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager) {
@@ -80,6 +82,12 @@ export class Game {
 				case NetworkIds.UPDATE_FOODMAP:
 					this.foodMap = message.data.foodMap;
 					break;
+				case NetworkIds.PLAYER_DEATH_SELF:
+					this.playerSelf.state = PlayerStates.DEAD;
+					break;
+				case NetworkIds.PLAYER_DEATH_OTHER:
+					delete this.playerOthers[message.data.clientId];
+					break;
 			}
 		}
 	}
@@ -87,7 +95,6 @@ export class Game {
 	update(elapsedTime: number) {
 		this.canvasChangeHookForTerrain();
 
-		// this.playerSelf?.eat(this.foodMap);
 		this.playerSelf?.update(elapsedTime);
 
 		for (let id in this.playerOthers) {
@@ -120,7 +127,6 @@ export class Game {
 	private updatePlayerOther(data: any) {
 		if (this.playerOthers.hasOwnProperty(data.clientId)) {
 			let player = this.playerOthers[data.clientId];
-			player.updateWindow = data.updateWindow;
 			player.positions = data.positions;
 			player.directions = data.directions;
 			player.length = data.length;
@@ -177,7 +183,9 @@ export class Game {
 			NetworkIds.DISCONNECT_OTHER,
 			NetworkIds.UPDATE_SELF,
 			NetworkIds.UPDATE_OTHER,
-			NetworkIds.UPDATE_FOODMAP
+			NetworkIds.UPDATE_FOODMAP,
+			NetworkIds.PLAYER_DEATH_SELF,
+			NetworkIds.PLAYER_DEATH_OTHER
 		];
 
 		standardListeners.forEach((networkReq) => {
@@ -277,7 +285,6 @@ export class Game {
 			data.size
 		);
 		player.lastUpdate = performance.now();
-		player.updateWindow = 0;
 
 		this.playerOthers[data.clientId] = player;
 	}

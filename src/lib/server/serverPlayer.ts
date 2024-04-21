@@ -4,15 +4,12 @@ import { Queue } from '../shared/queue';
 import { Player } from '../shared/player';
 
 export class ServerPlayer extends Player {
-	reportUpdate: boolean = false;
 	eatenFoods: Food[] = [];
-	lastUpdate: number = 0;
-	updateWindow: number = 0;
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
 		this.length = 50;
-		this.speed = 0.00005;
+		this.speed = 0.00008;
 		this.size = 1 / 100;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
 

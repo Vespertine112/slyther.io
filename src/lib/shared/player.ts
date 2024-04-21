@@ -2,8 +2,14 @@ import { Random } from '../shared/random';
 import { Food, Position } from '../shared/gameTypes';
 import { Queue } from '../shared/queue';
 
+export enum PlayerStates {
+	ALIVE,
+	DEAD
+}
+
 export class Player {
 	clientId: string;
+	name: string = '';
 
 	length!: number; // Represents player length
 	size!: number; // Player size (length / width for body parts)
@@ -16,6 +22,12 @@ export class Player {
 	eatenFoods: Food[] = [];
 	lastUpdate: number = 0;
 
+	/**
+	 * Players current state
+	 * If dead, controls are disabled
+	 */
+	state: PlayerStates = PlayerStates.ALIVE;
+
 	private readonly bodyOffset: number = 0.01; // Offset for body parts
 
 	constructor(clientId: string, pos: Position) {
@@ -24,12 +36,16 @@ export class Player {
 	}
 
 	boost(elapsedTime: number) {
+		if (this.state != PlayerStates.ALIVE) return;
+
 		this.reportUpdate = true;
 		this.moveSnakeForward(elapsedTime, 2);
 	}
 
 	// Rotates a player's head right
 	rotateRight(elapsedTime: number) {
+		if (this.state != PlayerStates.ALIVE) return;
+
 		this.reportUpdate = true;
 
 		// Increment direction angle
@@ -38,6 +54,8 @@ export class Player {
 
 	// Rotates a player's head left
 	rotateLeft(elapsedTime: number) {
+		if (this.state != PlayerStates.ALIVE) return;
+
 		this.reportUpdate = true;
 
 		// Decrement direction angle
@@ -46,6 +64,8 @@ export class Player {
 
 	// Player consumes 'foods' food units
 	eat(foodMap: { [foodId: string]: Food }) {
+		if (this.state != PlayerStates.ALIVE) return;
+
 		let foodsAte: Food[] = [];
 		for (let foodId in foodMap) {
 			let food = foodMap[foodId];
@@ -82,6 +102,8 @@ export class Player {
 	}
 
 	private moveSnakeForward(elapsedTime: number, multiplier?: number) {
+		if (this.state != PlayerStates.ALIVE) return;
+
 		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
 			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
@@ -112,7 +134,7 @@ export class Player {
 		this.positions[0].y += headDeltaY;
 	}
 
-	private headCollisionCheck(pos: Position): boolean {
+	headCollisionCheck(pos: Position): boolean {
 		// Calculate distance between player's head and the provided point
 		const deltaX = this.positions[0].x - pos.x;
 		const deltaY = this.positions[0].y - pos.y;

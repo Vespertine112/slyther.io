@@ -8,5 +8,7 @@ export enum NetworkIds {
 	DISCONNECT_OTHER = 'disconnect-other',
 	UPDATE_SELF = 'update-self',
 	UPDATE_OTHER = 'update-other',
-	UPDATE_FOODMAP = 'update-foodmap'
+	UPDATE_FOODMAP = 'update-foodmap',
+	PLAYER_DEATH_SELF = 'player-death-self',
+	PLAYER_DEATH_OTHER = 'player-death-other'
 }

@@ -5,6 +5,7 @@ import { ServerPlayer } from './serverPlayer';
 import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
 import { sineIn } from 'svelte/easing';
+import { Player, PlayerStates } from '../shared/player';
 
 interface Client {
 	socket: Socket;
@@ -70,6 +71,7 @@ export class GameServer {
 		while (!processQueue.empty) {
 			let input = processQueue.dequeue()!;
 			let client = this.activeClients[input.clientId];
+			if (!client) continue; // Handle input collision when sockets error
 			client.lastMessageId = input.message.id;
 			switch (input.message.type) {
 				case NetworkIds.INPUT_BOOST:
@@ -93,15 +95,42 @@ export class GameServer {
 		}
 
 		// Perform collision checks for all snakes
+		for (let clientId in this.activeClients) {
+			let player = this.activeClients[clientId].player;
+			if (player.state != PlayerStates.ALIVE) continue;
+			let hasCollided = false;
+
+			for (let otherClientId in this.activeClients) {
+				let otherPlayer = this.activeClients[otherClientId].player;
+				if (clientId == otherClientId || otherPlayer.state != PlayerStates.ALIVE) continue;
+
+				for (let i = 0; i < otherPlayer.positions.length; i++) {
+					const bodyPart = otherPlayer.positions[i];
+					if (player.headCollisionCheck(bodyPart)) {
+						this.log(`[Player Died] ${clientId}`);
+						player.state = PlayerStates.DEAD;
+						hasCollided = true;
+						break;
+					}
+				}
+
+				if (hasCollided) break;
+			}
+		}
 	}
 
 	updateClients(elapsedTime: number) {
-		// Aggregate consumed foods
+		// Aggregate consumed foods & Player Deaths
 		let foodsEaten: Food[] = [];
+		let deadPlayers: string[] = [];
 		for (let clientId in this.activeClients) {
-			let client = this.activeClients[clientId].player;
-			if (client.eatenFoods.length > 0) {
-				foodsEaten.concat(client.eatenFoods);
+			let player = this.activeClients[clientId].player;
+			if (player.state == PlayerStates.DEAD) {
+				deadPlayers.push(clientId);
+			}
+
+			if (player.eatenFoods.length > 0) {
+				foodsEaten.concat(player.eatenFoods);
 			}
 		}
 
@@ -110,9 +139,20 @@ export class GameServer {
 			delete this.foodMap[foodsEaten[idx].name];
 		}
 
+		// Update clients w/ new events & states
 		for (let clientId in this.activeClients) {
 			let client = this.activeClients[clientId];
 			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { foodMap: this.foodMap });
+
+			if (client.player.state == PlayerStates.DEAD) {
+				client.socket.emit(NetworkIds.PLAYER_DEATH_SELF);
+
+				for (let otherId in this.activeClients) {
+					if (otherId !== clientId && this.activeClients[otherId].player.state !== PlayerStates.DEAD) {
+						this.activeClients[otherId].socket.emit(NetworkIds.PLAYER_DEATH_OTHER, { clientId: clientId });
+					}
+				}
+			}
 
 			let update = {
 				clientId: clientId,
@@ -139,12 +179,6 @@ export class GameServer {
 			}
 
 			// Report any deaths to clients
-
-			// Report any eats to active
-
-			// if (client.player.reportEat) {
-			// 	clientId.socket.emit();
-			// }
 		}
 
 		for (let clientId in this.activeClients) {

@@ -9,9 +9,6 @@ export class ClientPlayer extends Player {
 	body!: Entity;
 	tail!: Entity;
 
-	reportUpdate: boolean = false;
-	lastUpdate: number = 0;
-
 	constructor(
 		clientId: string,
 		pos: Position[],
@@ -30,6 +27,22 @@ export class ClientPlayer extends Player {
 		this.rotateRate = rotateRate;
 		this.size = size;
 
+		this.initalizeBodyEntities(bodyEntitySpec);
+	}
+
+	// Rotates a player's head right
+	rotateRight(elapsedTime: number) {
+		super.rotateRight(elapsedTime);
+		this.head.direction += this.rotateRate * elapsedTime;
+	}
+
+	// Rotates a player's head left
+	rotateLeft(elapsedTime: number) {
+		super.rotateLeft(elapsedTime);
+		this.head.direction -= this.rotateRate * elapsedTime;
+	}
+
+	private initalizeBodyEntities(bodyEntitySpec: { head: Entity; body: Entity; tail: Entity } | undefined) {
 		let renderSize = 30;
 		if (!bodyEntitySpec) {
 			let headSprite = new Sprite(
@@ -74,17 +87,5 @@ export class ClientPlayer extends Player {
 				{ std: bodySprite }
 			);
 		}
-	}
-
-	// Rotates a player's head right
-	rotateRight(elapsedTime: number) {
-		super.rotateRight(elapsedTime);
-		this.head.direction += this.rotateRate * elapsedTime;
-	}
-
-	// Rotates a player's head left
-	rotateLeft(elapsedTime: number) {
-		super.rotateLeft(elapsedTime);
-		this.head.direction -= this.rotateRate * elapsedTime;
 	}
 }
