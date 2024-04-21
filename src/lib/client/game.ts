@@ -18,7 +18,7 @@ export enum GameStatusEnum {
  * Game - All State for the lander game
  */
 export class Game {
-	playerScore: number = 100;
+	playerScore: number = 0;
 	playTime: number = 0;
 	gameState: GameStatusEnum = GameStatusEnum.Idle;
 
@@ -94,6 +94,8 @@ export class Game {
 			this.playerOthers[id].eat(this.foodMap);
 			this.playerOthers[id].update(elapsedTime);
 		}
+
+		this.playerScore = this.playerSelf?.length ?? 0;
 	}
 
 	render() {

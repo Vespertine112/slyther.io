@@ -56,7 +56,7 @@ export class Player {
 				}
 			);
 			let bodySprite = new Sprite(
-				'assets/snakes/snake_green_blob.png',
+				'assets/snakes/snake_green_blobT.png',
 				{ render: true },
 				{
 					animate: false,

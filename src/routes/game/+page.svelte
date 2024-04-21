@@ -62,10 +62,27 @@
 
 {#if show}
 	<div class="mainWrapper" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
-		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
+		<div class="scoreCard">
+			<h1 style="margin:0;">{game.playerScore}</h1>
+		</div>
+
 		<div class="lowerLeft">
 			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
 		</div>
+
+		<div class="leaderBoard">
+			<h3 style="margin: 0;">Leaderboard</h3>
+			<hr style="width: 100%" />
+			<ol style="margin: 0;">
+				<li>Zack</li>
+				<li>Joe</li>
+				<li>Tommy</li>
+				<li>Tim</li>
+				<li>RomanConquerer</li>
+			</ol>
+		</div>
+
+		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
 	</div>
 {/if}
 
@@ -91,6 +108,37 @@
 		bottom: 0.5rem;
 		background: rgb(00, 00, 00, 0.3);
 		padding: 0.5rem;
-		border-radius: 1rem;
+		border-radius: 0.5rem;
+	}
+
+	.scoreCard {
+		position: absolute;
+		display: flex;
+		flex-direction: row;
+		left: 45%;
+		right: 45%;
+		top: 0.5rem;
+		background: rgb(00, 00, 00, 0.3);
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		justify-content: center;
+		flex-wrap: nowrap;
+		align-content: center;
+		align-items: center;
+	}
+
+	.leaderBoard {
+		position: absolute;
+		display: flex;
+		flex-direction: column;
+		top: 0.5rem;
+		right: 0.5rem;
+		background: rgb(00, 00, 00, 0.3);
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		align-content: space-around;
+		flex-wrap: wrap;
+		align-items: stretch;
+		justify-content: flex-start;
 	}
 </style>

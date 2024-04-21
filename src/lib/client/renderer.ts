@@ -87,7 +87,12 @@ export class Renderer {
 	renderPlayer(player: Player) {
 		// Handles the drop-shadow on the canvas
 		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
-		// console.log(adjustedPlayerSize);
+
+		// Leaving this here
+		// this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Shadow color with alpha
+		// this.ctx.shadowBlur = 10; // Blur radius
+		// this.ctx.shadowOffsetX = 5; // Horizontal offset of the shadow
+		// this.ctx.shadowOffsetY = 5; // Vertical offset of the shadow
 
 		let currentEntity: Entity | undefined = player.tail;
 		for (let idx = player.positions.length - 1; idx >= 0; idx--) {
@@ -97,9 +102,9 @@ export class Renderer {
 			const bodySegPos = player.positions[idx];
 			const bodySegDir = player.directions[idx];
 
-			// if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
-			// 	continue;
-			// }
+			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
+				continue;
+			}
 
 			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);
 
