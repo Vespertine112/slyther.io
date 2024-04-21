@@ -1,5 +1,5 @@
 import { Food, Position } from '$lib/shared/gameTypes';
-import type { Player } from '$lib/client/player';
+import type { ClientPlayer } from '$lib/client/clientPlayer';
 import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
 
@@ -16,7 +16,7 @@ export class Renderer {
 	 * tileWorldCoverage determines how much of the
 	 * a tile should covers (world units, i.e. < 1)
 	 */
-	private tileWorldCoverage: number = 1 / 30;
+	private tileWorldCoverage: number = 1 / 20;
 
 	/**
 	 * The viewport only covers a square of the overall world.
@@ -28,7 +28,7 @@ export class Renderer {
 
 	constructor(
 		public canvas: HTMLCanvasElement,
-		public playerSelf: Player
+		public playerSelf: ClientPlayer
 	) {
 		this.ctx = canvas.getContext('2d')!;
 		this.updateWorldCoverage();
@@ -84,7 +84,7 @@ export class Renderer {
 	 * Renders (a) player on the canvas.
 	 * @param player The player to render.
 	 */
-	renderPlayer(player: Player) {
+	renderPlayer(player: ClientPlayer) {
 		// Handles the drop-shadow on the canvas
 		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
 
@@ -143,9 +143,22 @@ export class Renderer {
 			return; // Skip rendering if food is outside the viewport
 		}
 
-		this.ctx.fillStyle = 'red';
 		const canvasPos = this.translateGamePositionToCanvas(food.position);
 
+		// Define radial gradient colors
+		const gradient = this.ctx.createRadialGradient(
+			canvasPos.x,
+			canvasPos.y,
+			0, // Inner circle position (same as food)
+			canvasPos.x,
+			canvasPos.y,
+			this.convertWorldLengthToPixels(food.radius * 2) // Outer circle position (extended by radius)
+		);
+		gradient.addColorStop(0, 'red'); // Start color
+		gradient.addColorStop(1, 'transparent'); // End color
+
+		// Fill food circle with radial gradient
+		this.ctx.fillStyle = gradient;
 		this.ctx.beginPath();
 		this.ctx.arc(canvasPos.x, canvasPos.y, this.convertWorldLengthToPixels(food.radius), 0, Math.PI * 2);
 		this.ctx.fill();
@@ -254,7 +267,7 @@ export class Renderer {
 
 	private initBackgroundTileEntities() {
 		let backgroundSprite = new Sprite(
-			'assets/backgrounds/Sand_tile.png',
+			'assets/backgrounds/Leaf_tile.png',
 			{ render: true },
 			{
 				animate: false,

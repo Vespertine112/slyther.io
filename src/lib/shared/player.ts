@@ -1,89 +1,26 @@
 import { Random } from '../shared/random';
-import { Position } from '../shared/gameTypes';
-import { Entity } from './entites/entity';
-import Sprite from './entites/sprite';
+import { Food, Position } from '../shared/gameTypes';
+import { Queue } from '../shared/queue';
 
 export class Player {
-	length: number;
-	size: number;
-	speed: number;
-	rotateRate: number = Math.PI / 400;
-	positions: Position[] = [];
-	directions: number[] = []; // Direction(s) in radians for body part
-
-	head!: Entity;
-	body!: Entity;
-	tail!: Entity;
-
-	reportUpdate: boolean = false;
-	reportEat: boolean = false;
-	lastUpdate: number = 0;
-	updateWindow: number = 0;
-
 	clientId: string;
 
-	constructor(
-		clientId: string,
-		pos: Position[],
-		dir: number[],
-		length: number,
-		speed: number,
-		rotateRate: number,
-		size: number,
-		bodyEntitySpec?: { head: Entity; body: Entity; tail: Entity }
-	) {
-		this.clientId = clientId;
-		this.positions = pos;
-		this.directions = dir;
-		this.length = length;
-		this.speed = speed;
-		this.rotateRate = rotateRate;
-		this.size = size;
+	length!: number; // Represents player length
+	size!: number; // Player size (length / width for body parts)
+	speed!: number;
+	rotateRate: number = Math.PI / 300;
+	positions: Position[] = [];
+	directions: number[] = []; // Direction(s) in radians for each body part
 
-		let renderSize = 30;
-		if (!bodyEntitySpec) {
-			let headSprite = new Sprite(
-				'assets/snakes/snake_green_head.png',
-				{ render: true },
-				{
-					animate: false,
-					animStartX: 0,
-					animStartY: 0,
-					animCropH: 1024,
-					animCropW: 1024,
-					sheetCols: 1,
-					sheetRows: 1
-				}
-			);
-			let bodySprite = new Sprite(
-				'assets/snakes/snake_green_blobT.png',
-				{ render: true },
-				{
-					animate: false,
-					animStartX: 0,
-					animStartY: 0,
-					animCropH: 512,
-					animCropW: 512,
-					sheetCols: 1,
-					sheetRows: 1
-				}
-			);
-			this.head = new Entity(
-				'std',
-				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
-				{ std: headSprite }
-			);
-			this.body = new Entity(
-				'std',
-				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
-				{ std: bodySprite }
-			);
-			this.tail = new Entity(
-				'std',
-				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
-				{ std: bodySprite }
-			);
-		}
+	reportUpdate: boolean = false;
+	eatenFoods: Food[] = [];
+	lastUpdate: number = 0;
+
+	private readonly bodyOffset: number = 0.01; // Offset for body parts
+
+	constructor(clientId: string, pos: Position) {
+		this.clientId = clientId;
+		this.positions.push(pos);
 	}
 
 	boost(elapsedTime: number) {
@@ -97,44 +34,50 @@ export class Player {
 
 		// Increment direction angle
 		this.directions[0] += this.rotateRate * elapsedTime;
-		this.head.direction += this.rotateRate * elapsedTime;
 	}
 
 	// Rotates a player's head left
 	rotateLeft(elapsedTime: number) {
 		this.reportUpdate = true;
 
+		// Decrement direction angle
 		this.directions[0] -= this.rotateRate * elapsedTime;
-		this.head.direction -= this.rotateRate * elapsedTime;
 	}
 
 	// Player consumes 'foods' food units
 	eat(foodMap: { [foodId: string]: Food }) {
-		let foodsAte: string[] = [];
+		let foodsAte: Food[] = [];
 		for (let foodId in foodMap) {
 			let food = foodMap[foodId];
 
 			if (this.headCollisionCheck(food.position)) {
-				foodsAte.push(foodId);
-				// console.log('ate', this.length, food.size);
+				foodsAte.push(food);
 
 				this.reportUpdate = true;
 				this.length += Math.floor(food.size);
-				let copy = this.positions.at(-1)!;
-				this.positions.splice(-1, 0, structuredClone(copy));
+
+				// Calculate offset for new body part
+				const offsetX = Math.cos(this.directions[this.positions.length - 1]) * this.bodyOffset;
+				const offsetY = Math.sin(this.directions[this.positions.length - 1]) * this.bodyOffset;
+
+				// Add new body part at correct offset
+				const lastPos = this.positions[this.positions.length - 1];
+				const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
+				newPos.prev = new Position(lastPos.x, lastPos.y);
+				this.positions.push(newPos);
 			}
 		}
 
-		foodsAte.forEach((foodId) => {
-			delete foodMap[foodId];
+		// Delete eaten foods from the food map
+		foodsAte.forEach((food) => {
+			delete foodMap[food.name];
 		});
 
-		this.reportEat = foodsAte.length > 0;
+		this.eatenFoods = foodsAte;
 	}
 
 	// Continue movement based on current time
 	update(elapsedTime: number) {
-		// this.reportUpdate = true;
 		this.moveSnakeForward(elapsedTime);
 	}
 
@@ -157,8 +100,6 @@ export class Player {
 			}
 
 			// Check if the body part has reached its target position
-			// If it has, iterate until it targets a position that is farther
-			// Then set that position
 			if (distance <= this.speed * elapsedTime) {
 				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			}
@@ -178,6 +119,6 @@ export class Player {
 		const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
 		// Check if the distance is less than or equal to the radius of the player's head
-		return distance <= this.size / 2;
+		return distance <= this.size;
 	}
 }

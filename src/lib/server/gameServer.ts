@@ -1,14 +1,14 @@
 import { Vector, Position, Food } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
-import { Player } from './player';
+import { ServerPlayer } from './serverPlayer';
 import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
 import { sineIn } from 'svelte/easing';
 
 interface Client {
 	socket: Socket;
-	player: Player;
+	player: ServerPlayer;
 	lastMessageId: number;
 }
 
@@ -154,7 +154,7 @@ export class GameServer {
 
 	initalizeSocketIO(socketServer: Server) {
 		// Notify clients of new player connection
-		const notifyConnect = (socket: Socket, newPlayer: Player) => {
+		const notifyConnect = (socket: Socket, newPlayer: ServerPlayer) => {
 			for (let clientId in this.activeClients) {
 				let client = this.activeClients[clientId];
 
@@ -198,7 +198,7 @@ export class GameServer {
 			this.log('Connection   :', socket.id);
 
 			// Create an entry in our list of connected clients
-			let newPlayer = new Player(socket.id, this.getValidPostitionForNewPlayer());
+			let newPlayer = new ServerPlayer(socket.id, this.getValidPostitionForNewPlayer());
 			newPlayer.clientId = socket.id;
 			this.activeClients[socket.id] = {
 				socket: socket,

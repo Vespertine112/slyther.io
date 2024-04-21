@@ -62,23 +62,23 @@
 
 {#if show}
 	<div class="mainWrapper" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
-		<div class="scoreCard">
+		<div class="scoreCard displayText">
 			<h1 style="margin:0;">{game.playerScore}</h1>
 		</div>
 
-		<div class="lowerLeft">
+		<div class="lowerLeft displayText">
 			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
 		</div>
 
 		<div class="leaderBoard">
-			<h3 style="margin: 0;">Leaderboard</h3>
+			<h3 class="displayText" style="margin: 0;">Leaderboard</h3>
 			<hr style="width: 100%" />
 			<ol style="margin: 0;">
-				<li>Zack</li>
-				<li>Joe</li>
-				<li>Tommy</li>
-				<li>Tim</li>
-				<li>RomanConquerer</li>
+				<li class="displayText">Zack</li>
+				<li class="displayText">Joe</li>
+				<li class="displayText">Tommy</li>
+				<li class="displayText">Tim</li>
+				<li class="displayText">RomanConquerer</li>
 			</ol>
 		</div>
 
@@ -138,7 +138,12 @@
 		border-radius: 0.5rem;
 		align-content: space-around;
 		flex-wrap: wrap;
-		align-items: stretch;
+		align-items: center;
 		justify-content: flex-start;
+	}
+
+	.displayText {
+		color: white;
+		text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
 	}
 </style>

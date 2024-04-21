@@ -4,7 +4,7 @@ import { CustomCommands } from '$lib/inputManager';
 import { Socket, io } from 'socket.io-client';
 import { NetworkIds } from '$lib/shared/network-ids';
 import { Queue } from '$lib/shared/queue';
-import { Player } from '$lib/client/player';
+import { ClientPlayer } from '$lib/client/clientPlayer';
 import { Renderer } from './renderer';
 
 export enum GameStatusEnum {
@@ -32,8 +32,8 @@ export class Game {
 	private messageHistory = new Queue<any>();
 	private networkQueue = new Queue<any>();
 
-	private playerSelf!: Player;
-	private playerOthers: { [clientId: string]: Player } = {};
+	private playerSelf!: ClientPlayer;
+	private playerOthers: { [clientId: string]: ClientPlayer } = {};
 	private foodMap: { [foodId: string]: Food } = {};
 
 	inputLatency = 0;
@@ -253,7 +253,7 @@ export class Game {
 	}
 
 	private connectPlayerSelf(data) {
-		this.playerSelf = new Player(
+		this.playerSelf = new ClientPlayer(
 			this.socket.id!,
 			data.positions,
 			data.directions,
@@ -267,7 +267,7 @@ export class Game {
 	}
 
 	private connectPlayerOther(data) {
-		let player = new Player(
+		let player = new ClientPlayer(
 			data.clientId,
 			data.positions,
 			data.directions,

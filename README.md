@@ -1,3 +1,6 @@
 # Todo:
 
-Clean code & design the control structure.
+-   Implement Player Collisions / Death
+-   Add particle effects at head when colliding
+-   Add sound effect when eating food
+-   Add particle effects when eating food
