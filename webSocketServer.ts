@@ -11,7 +11,7 @@ export const webSocketServer = {
 	configureServer(server: ViteDevServer) {
 		if (!server.httpServer) return;
 
-		console.log('\033[0;31m[WSS]\033[0m Server Injected');
+		console.log('\033[0;31m[WSS]\033[0m Game Server Injected');
 
 		const io: Server = new Server(server.httpServer);
 		const game = new GameServer();

@@ -35,7 +35,10 @@ export class GameServer {
 
 			const currentTime = performance.now();
 			const elapsedTime = currentTime - lastTime;
-			this.log(`LT: ${Math.trunc(elapsedTime)}`);
+
+			if (elapsedTime > 50) {
+				this.log(`[Warning] Frame Time: ${Math.trunc(elapsedTime)}`);
+			}
 
 			this.processInput(elapsedTime);
 			this.update(elapsedTime, currentTime);
@@ -53,7 +56,7 @@ export class GameServer {
 	initalizeGame(socketServer: Server) {
 		this.initalizeSocketIO(socketServer);
 
-		this.log('Server Started');
+		this.log('Game Server Started');
 
 		this.initalizeFoodMap();
 

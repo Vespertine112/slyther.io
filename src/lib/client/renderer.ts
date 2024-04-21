@@ -30,11 +30,6 @@ export class Renderer {
 	 */
 	renderPlayer(player: Player) {
 		// Handles the drop-shadow on the canvas
-		this.ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-		this.ctx.shadowBlur = 10;
-		this.ctx.shadowOffsetX = 5;
-		this.ctx.shadowOffsetY = 5;
-
 		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
 		// console.log(adjustedPlayerSize);
 
@@ -46,11 +41,9 @@ export class Renderer {
 			const bodySegPos = player.positions[idx];
 			const bodySegDir = player.directions[idx];
 
-			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
-				console.log('nobod');
-
-				continue;
-			}
+			// if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
+			// 	continue;
+			// }
 
 			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);
 
@@ -85,9 +78,9 @@ export class Renderer {
 	 * @param food The food item to render.
 	 */
 	renderFood(food: Food) {
-		if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
-			return; // Skip rendering if food is outside the viewport
-		}
+		// if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
+		// 	return; // Skip rendering if food is outside the viewport
+		// }
 
 		this.ctx.fillStyle = 'red';
 		const canvasPos = this.translateGamePositionToCanvas(food.position);

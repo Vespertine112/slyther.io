@@ -88,7 +88,7 @@ export class Player {
 
 	boost(elapsedTime: number) {
 		this.reportUpdate = true;
-		this.moveSnakeForward(elapsedTime);
+		this.moveSnakeForward(elapsedTime, 2);
 	}
 
 	// Rotates a player's head right
@@ -138,7 +138,7 @@ export class Player {
 		this.moveSnakeForward(elapsedTime);
 	}
 
-	private moveSnakeForward(elapsedTime: number) {
+	private moveSnakeForward(elapsedTime: number, multiplier?: number) {
 		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
 			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
@@ -148,7 +148,7 @@ export class Player {
 			const absDy = Math.abs(deltaY);
 
 			const distance = Math.sqrt(absDx * absDx + absDy * absDy);
-			const ratio = (this.speed * elapsedTime) / distance;
+			const ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
 
 			if (distance > 0) {
 				this.positions[i].x += deltaX * ratio;
@@ -157,14 +157,16 @@ export class Player {
 			}
 
 			// Check if the body part has reached its target position
+			// If it has, iterate until it targets a position that is farther
+			// Then set that position
 			if (distance <= this.speed * elapsedTime) {
 				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			}
 		}
 
 		// Update head position and direction
-		const headDeltaX = Math.cos(this.directions[0]) * this.speed * elapsedTime;
-		const headDeltaY = Math.sin(this.directions[0]) * this.speed * elapsedTime;
+		const headDeltaX = Math.cos(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
+		const headDeltaY = Math.sin(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
 	}

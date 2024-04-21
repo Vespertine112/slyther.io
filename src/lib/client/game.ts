@@ -72,6 +72,8 @@ export class Game {
 					this.disconnectPlayerOther(message.data);
 					break;
 				case NetworkIds.UPDATE_SELF:
+					console.log('update self');
+
 					this.updatePlayerSelf(message.data);
 					break;
 				case NetworkIds.UPDATE_OTHER:
