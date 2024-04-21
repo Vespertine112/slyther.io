@@ -46,6 +46,12 @@ export class Renderer {
 			const bodySegPos = player.positions[idx];
 			const bodySegDir = player.directions[idx];
 
+			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
+				console.log('nobod');
+
+				continue;
+			}
+
 			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);
 
 			let playerSegmentSprite = currentEntity.getActiveSprite();
@@ -79,6 +85,10 @@ export class Renderer {
 	 * @param food The food item to render.
 	 */
 	renderFood(food: Food) {
+		if (!this.viewportCircleCollisionCheck(food.position, food.radius)) {
+			return; // Skip rendering if food is outside the viewport
+		}
+
 		this.ctx.fillStyle = 'red';
 		const canvasPos = this.translateGamePositionToCanvas(food.position);
 
@@ -90,6 +100,71 @@ export class Renderer {
 
 	clear() {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+
+	private viewportCircleCollisionCheck(pos: Position, radius: number): boolean {
+		// Calculate the distance between the center of the circle and the player's position
+		const deltaX = pos.x - this.playerSelf.positions[0].x;
+		const deltaY = pos.y - this.playerSelf.positions[0].y;
+		const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+		const radiusSquared = radius * radius;
+
+		// Check if the circle is within the viewport by comparing the squared distances
+		return distanceSquared + radius <= (this.worldCoverage / 2) ** 2;
+	}
+
+	private viewportRectangleCollisionCheck(topLeft: Position, width: number, height: number): boolean {
+		const playerX = this.playerSelf.positions[0].x;
+		const playerY = this.playerSelf.positions[0].y;
+
+		// Calculate the coordinates of the rectangle's bottom-right corner
+		const bottomRightX = topLeft.x + width;
+		const bottomRightY = topLeft.y + height;
+
+		// Check if any corner of the rectangle is within the viewport
+		return (
+			this.viewportPointCollisionCheck(topLeft) ||
+			this.viewportPointCollisionCheck(new Position(bottomRightX, topLeft.y)) ||
+			this.viewportPointCollisionCheck(new Position(topLeft.x, bottomRightY)) ||
+			this.viewportPointCollisionCheck(new Position(bottomRightX, bottomRightY)) ||
+			// Check if any edge of the rectangle intersects with the viewport
+			this.viewportLineCollisionCheck(topLeft, new Position(bottomRightX, topLeft.y)) ||
+			this.viewportLineCollisionCheck(
+				new Position(bottomRightX, topLeft.y),
+				new Position(bottomRightX, bottomRightY)
+			) ||
+			this.viewportLineCollisionCheck(
+				new Position(bottomRightX, bottomRightY),
+				new Position(topLeft.x, bottomRightY)
+			) ||
+			this.viewportLineCollisionCheck(new Position(topLeft.x, bottomRightY), topLeft)
+		);
+	}
+
+	private viewportPointCollisionCheck(pos: Position): boolean {
+		return (
+			pos.x >= this.playerSelf.positions[0].x - this.worldCoverage / 2 &&
+			pos.x <= this.playerSelf.positions[0].x + this.worldCoverage / 2 &&
+			pos.y >= this.playerSelf.positions[0].y - this.worldCoverage / 2 &&
+			pos.y <= this.playerSelf.positions[0].y + this.worldCoverage / 2
+		);
+	}
+
+	private viewportLineCollisionCheck(start: Position, end: Position): boolean {
+		const minX = Math.min(start.x, end.x);
+		const maxX = Math.max(start.x, end.x);
+		const minY = Math.min(start.y, end.y);
+		const maxY = Math.max(start.y, end.y);
+
+		return (
+			this.viewportPointCollisionCheck(start) || // Check if the start point is within the viewport
+			this.viewportPointCollisionCheck(end) || // Check if the end point is within the viewport
+			// Check if any part of the line segment intersects with the viewport
+			(minX <= this.playerSelf.positions[0].x + this.worldCoverage / 2 &&
+				maxX >= this.playerSelf.positions[0].x - this.worldCoverage / 2 &&
+				minY <= this.playerSelf.positions[0].y + this.worldCoverage / 2 &&
+				maxY >= this.playerSelf.positions[0].y - this.worldCoverage / 2)
+		);
 	}
 
 	private translateGamePositionToCanvas(pos: Position) {

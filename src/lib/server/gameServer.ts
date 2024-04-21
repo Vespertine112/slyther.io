@@ -35,13 +35,15 @@ export class GameServer {
 
 			const currentTime = performance.now();
 			const elapsedTime = currentTime - lastTime;
+			this.log(`LT: ${Math.trunc(elapsedTime)}`);
 
 			this.processInput(elapsedTime);
 			this.update(elapsedTime, currentTime);
 			this.updateClients(elapsedTime);
 
-			const nextInterval = Math.max(1, elapsedTime); // Ensure at least 1 ms interval. If it runs too fast we loop-out the server lol
 			lastTime = currentTime;
+
+			const nextInterval = Math.min(1, elapsedTime); // Ensure at least 1 ms interval. If it runs too fast we loop-out the server lol
 			setTimeout(loop, nextInterval);
 		};
 
@@ -238,7 +240,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		const numFood = 100;
+		const numFood = 1000;
 
 		for (let i = 0; i < numFood; i++) {
 			this.foodMap[`${i}`] = new Food(
