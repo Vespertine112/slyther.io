@@ -91,12 +91,6 @@ export class Renderer {
 		// Handles the drop-shadow on the canvas
 		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
 
-		// Leaving this here
-		// this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Shadow color with alpha
-		// this.ctx.shadowBlur = 10; // Blur radius
-		// this.ctx.shadowOffsetX = 5; // Horizontal offset of the shadow
-		// this.ctx.shadowOffsetY = 5; // Vertical offset of the shadow
-
 		let currentEntity: Entity | undefined = player.tail;
 		for (let idx = player.positions.length - 1; idx >= 0; idx--) {
 			if (idx == 0) currentEntity = player.head;
@@ -247,14 +241,19 @@ export class Renderer {
 		);
 	}
 
-	private translateGamePositionToCanvas(pos: Position) {
+	/**
+	 * Translates a given world position to an accurate canvas position
+	 */
+	private translateGamePositionToCanvas(pos: Position): Position {
 		let scaleRatio = Math.max(this.canvas.width, this.canvas.height);
+		let cw = this.canvas.width / scaleRatio;
+		let ch = this.canvas.height / scaleRatio;
 
-		let viewportLeft = this.playerSelf.positions[0].x - this.worldCoverage / 2;
-		let viewportTop = this.playerSelf.positions[0].y - this.worldCoverage / 2;
+		let viewportLeft = this.playerSelf.positions[0].x - (this.worldCoverage / 2) * cw;
+		let viewportTop = this.playerSelf.positions[0].y - (this.worldCoverage / 2) * ch;
 
-		let transPositionX = ((pos.x - viewportLeft) * this.canvas.width) / this.worldCoverage;
-		let transPositionY = ((pos.y - viewportTop) * this.canvas.height) / this.worldCoverage;
+		let transPositionX = ((pos.x - viewportLeft) * this.canvas.width) / cw / this.worldCoverage;
+		let transPositionY = ((pos.y - viewportTop) * this.canvas.height) / ch / this.worldCoverage;
 
 		return new Position(transPositionX, transPositionY);
 	}
