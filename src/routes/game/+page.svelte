@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { Game, GameStatusEnum } from '$lib/client/game';
-	import { MusicManager, type Music } from '$lib/client/music';
+	import { MusicManager } from '$lib/client/music';
 	import InputManager from '$lib/inputManager';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { blur } from 'svelte/transition';
@@ -12,18 +12,8 @@
 	$: frameCounter = 0;
 	let canvas: HTMLCanvasElement;
 	let lastTimestamp = performance.now();
-
-	let game: Game = new Game();
-	let inputManager: InputManager = new InputManager();
-	const keyPressHandler = inputManager.keyPress.bind(inputManager);
-	const keyReleaseHandler = inputManager.keyRelease.bind(inputManager);
-	const mouseMoveHandler = inputManager.mouseMove.bind(inputManager);
-	const mouseUpHandler = inputManager.mouseUp.bind(inputManager);
-
-	let biteFoodSound: HTMLAudioElement;
-	let backgroundMusic: HTMLAudioElement;
-
 	let highScores: { name: string; score: number }[] = [];
+	let playerName: string | null;
 
 	// Grab the stored scores
 	if (browser) {
@@ -32,6 +22,19 @@
 			highScores = JSON.parse(storedHighScores);
 		}
 	}
+
+	// Grab stored playername
+	// Note if it is undefined, that's expected and the server will assign a name!
+	if (browser) {
+		playerName = localStorage.getItem('slyther.io.playerName');
+	}
+
+	let game: Game = new Game();
+	let inputManager: InputManager = new InputManager();
+	const keyPressHandler = inputManager.keyPress.bind(inputManager);
+	const keyReleaseHandler = inputManager.keyRelease.bind(inputManager);
+	const mouseMoveHandler = inputManager.mouseMove.bind(inputManager);
+	const mouseUpHandler = inputManager.mouseUp.bind(inputManager);
 
 	onMount(async () => {
 		show = true;
@@ -69,7 +72,7 @@
 			musicManager.playMusic('backgroundMusic', true, 0.5);
 		});
 
-		game.initalizeGame(canvas, inputManager);
+		game.initalizeGame(canvas, inputManager, playerName);
 		gameLoop(performance.now());
 
 		if (false) {
@@ -110,16 +113,18 @@
 			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
 		</div>
 
+		<div class="lowerRight displayText">
+			<p style="margin: 0;">Rank: {game.playerRank + 1}</p>
+		</div>
+
 		<!-- Leaderboard -->
 		<div class="leaderBoard">
 			<h3 class="displayText" style="margin: 0;">Leaderboard</h3>
 			<hr style="width: 100%" />
 			<ol style="margin: 0;">
-				<li class="displayText">Zack</li>
-				<li class="displayText">Joe</li>
-				<li class="displayText">Tommy</li>
-				<li class="displayText">Tim</li>
-				<li class="displayText">RomanConquerer</li>
+				{#each game.leaderBoard as leader}
+					<li class="displayText">{leader.name}</li>
+				{/each}
 			</ol>
 		</div>
 
@@ -139,11 +144,6 @@
 		<!-- Game Canvas -->
 		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
 	</div>
-
-	<audio id="biteFoodSound" bind:this={biteFoodSound}>
-		<source src="" type="audio/mpeg" />
-		Your browser does not support the audio element.
-	</audio>
 {/if}
 
 <style>
@@ -165,6 +165,18 @@
 		display: flex;
 		flex-direction: row;
 		left: 0.5rem;
+		bottom: 0.5rem;
+		background: rgb(00, 00, 00, 0.3);
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		z-index: 100;
+	}
+
+	.lowerRight {
+		position: absolute;
+		display: flex;
+		flex-direction: row;
+		right: 0.5rem;
 		bottom: 0.5rem;
 		background: rgb(00, 00, 00, 0.3);
 		padding: 0.5rem;

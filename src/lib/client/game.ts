@@ -23,6 +23,7 @@ export enum GameStatusEnum {
  */
 export class Game {
 	playerScore: number = 0;
+	playerRank: number = 1;
 	playTime: number = 0;
 	gameState: GameStatusEnum = GameStatusEnum.Idle;
 
@@ -40,8 +41,8 @@ export class Game {
 
 	private playerSelf!: ClientPlayer;
 	private playerOthers: { [clientId: string]: ClientPlayer } = {};
-
 	private foodMap: { [foodId: string]: Food } = {};
+	leaderBoard: { name: string; clientId: string; length: number }[] = [];
 
 	inputLatency = 0;
 
@@ -50,7 +51,7 @@ export class Game {
 		this.socket.connect();
 	}
 
-	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager) {
+	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager, playerName: string | null) {
 		this.canvas = canvas;
 
 		this.oldCanvas = { width: canvas.width, height: canvas.height };
@@ -61,6 +62,8 @@ export class Game {
 		this.registerKeyboardHandlers();
 
 		this.gameState = GameStatusEnum.Playing;
+
+		this.socket.emit(NetworkIds.REQUEST_NAME, playerName);
 	}
 
 	processInput(elapsedTime: number) {
@@ -84,8 +87,15 @@ export class Game {
 				case NetworkIds.UPDATE_SELF:
 					this.updatePlayerSelf(message.data);
 					break;
+				case NetworkIds.UPDATE_LEADERBOARD:
+					this.leaderBoard = message.data.top5;
+					this.playerRank = message.data.rank;
+					break;
 				case NetworkIds.UPDATE_OTHER:
 					this.updatePlayerOther(message.data);
+					break;
+				case NetworkIds.UPDATE_NAME:
+					this.playerSelf.name = message.data;
 					break;
 				case NetworkIds.PLAYER_SELF_ATE:
 					this.playerSelf.eat();
@@ -255,8 +265,10 @@ export class Game {
 			NetworkIds.CONNECT_OTHER,
 			NetworkIds.DISCONNECT_OTHER,
 			NetworkIds.UPDATE_SELF,
+			NetworkIds.UPDATE_LEADERBOARD,
 			NetworkIds.UPDATE_OTHER,
 			NetworkIds.UPDATE_FOODMAP,
+			NetworkIds.UPDATE_NAME,
 			NetworkIds.PLAYER_SELF_ATE,
 			NetworkIds.PLAYER_DEATH_SELF,
 			NetworkIds.PLAYER_DEATH_OTHER
@@ -325,6 +337,7 @@ export class Game {
 		);
 		this.renderer = new Renderer(this.canvas, this.playerSelf);
 		this.foodMap = data.foodMap;
+		this.leaderBoard = data.leaderBoard;
 
 		let eatParticles = function () {
 			let degrees = (this.direction * 180) / Math.PI;

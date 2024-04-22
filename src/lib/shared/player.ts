@@ -33,6 +33,7 @@ export class Player {
 
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
+		this.name = clientId;
 		this.positions.push(pos);
 	}
 

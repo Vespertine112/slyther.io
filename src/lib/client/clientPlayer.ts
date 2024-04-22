@@ -72,31 +72,45 @@ export class ClientPlayer extends Player {
 		let renderSize = 30;
 		if (!bodyEntitySpec) {
 			let headSprite = new Sprite(
-				'assets/snakes/snake_green_head.png',
+				'assets/snakes/Self_head.png',
 				{ render: true },
 				{
 					animate: false,
 					animStartX: 0,
 					animStartY: 0,
-					animCropH: 1024,
-					animCropW: 1024,
+					animCropH: 32,
+					animCropW: 32,
 					sheetCols: 1,
 					sheetRows: 1
 				}
 			);
 			let bodySprite = new Sprite(
-				'assets/snakes/snake_green_blob.png',
+				'assets/snakes/Self_body.png',
 				{ render: true },
 				{
 					animate: false,
 					animStartX: 0,
 					animStartY: 0,
-					animCropH: 512,
-					animCropW: 512,
+					animCropH: 32,
+					animCropW: 32,
 					sheetCols: 1,
 					sheetRows: 1
 				}
 			);
+			let tailSprite = new Sprite(
+				'assets/snakes/Self_tail.png',
+				{ render: true },
+				{
+					animate: false,
+					animStartX: 0,
+					animStartY: 0,
+					animCropH: 32,
+					animCropW: 32,
+					sheetCols: 1,
+					sheetRows: 1
+				}
+			);
+
 			this.head = new Entity(
 				'std',
 				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
@@ -110,7 +124,7 @@ export class ClientPlayer extends Player {
 			this.tail = new Entity(
 				'std',
 				{ render: true, position: new Position(0, 0), width: renderSize, height: renderSize },
-				{ std: bodySprite }
+				{ std: tailSprite }
 			);
 		}
 	}

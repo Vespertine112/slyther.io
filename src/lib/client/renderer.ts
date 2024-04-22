@@ -113,7 +113,7 @@ export class Renderer {
 
 				// Translate and rotate based on segment position and direction
 				this.ctx.translate(canvasPos.x + currentEntity.width! / 2, canvasPos.y + currentEntity.height! / 2);
-				this.ctx.rotate(bodySegDir);
+				this.ctx.rotate(bodySegDir + Math.PI / 2);
 
 				// Draw the segment
 				this.ctx.drawImage(

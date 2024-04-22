@@ -4,7 +4,6 @@ import { NetworkIds } from '../shared/network-ids';
 import { ServerPlayer } from './serverPlayer';
 import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
-import { sineIn } from 'svelte/easing';
 import { Player, PlayerStates } from '../shared/player';
 import { foodFiles } from '../shared/misc';
 
@@ -29,6 +28,7 @@ export class GameServer {
 	private foodCounter = 0;
 	/** Tracks which foods are dynamically added during a loop */
 	private foodsAdded: Food[] = [];
+	private leaderBoard: { name: string; clientId: string; length: number }[] = [];
 
 	constructor() {
 		this.foodMap = {};
@@ -154,9 +154,11 @@ export class GameServer {
 	}
 
 	updateClients(elapsedTime: number) {
-		// Aggregate consumed foods & Player Deaths
+		// Aggregate consumed foods / player deaths / leaderboard
 		let foodsEaten: string[] = [];
 		let deadPlayers: string[] = [];
+		let leaderboardChanged = false;
+		let newLeaderboard = [];
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
 			if (player.state == PlayerStates.DEAD) {
@@ -166,16 +168,33 @@ export class GameServer {
 			if (player.eatenFoods.length > 0) {
 				foodsEaten = foodsEaten.concat(player.eatenFoods);
 			}
+
+			newLeaderboard.push({ clientId: player.clientId, name: player.name, length: player.length });
+		}
+
+		newLeaderboard.sort((a, b) => {
+			return b.length - a.length;
+		});
+		for (let i = 0; i < newLeaderboard.length; i++) {
+			const player = newLeaderboard[i];
+
+			if (player.name !== this.leaderBoard.at(i)?.name) {
+				leaderboardChanged = true;
+				this.leaderBoard = newLeaderboard;
+				break;
+			}
 		}
 
 		// Update clients w/ new events & states
 		for (let clientId in this.activeClients) {
+			// UPDATE FOOD STATUS
 			let client = this.activeClients[clientId];
 			if (client.player.eatenFoods.length > 0) {
 				client.socket.emit(NetworkIds.PLAYER_SELF_ATE);
 			}
 			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { new: this.foodsAdded, eaten: foodsEaten });
 
+			// UPDATE PLAYER DEATH STATUS
 			if (client.player.state == PlayerStates.DEAD && !client.player.reportedAsDead) {
 				client.socket.emit(NetworkIds.PLAYER_DEATH_SELF);
 				client.player.reportedAsDead = true;
@@ -187,6 +206,11 @@ export class GameServer {
 				}
 			}
 
+			// UPDATE LEADERBOARDS
+			let rank = this.leaderBoard.findIndex((v) => v.clientId == client.player.clientId);
+			client.socket.emit(NetworkIds.UPDATE_LEADERBOARD, { rank: rank, top5: this.leaderBoard.slice(0, 5) });
+
+			// UPDATE PLAYER MOVEMENTS
 			let update = {
 				clientId: clientId,
 				lastMessageId: client.lastMessageId,
@@ -277,7 +301,8 @@ export class GameServer {
 				size: newPlayer.size,
 				rotateRate: newPlayer.rotateRate,
 				speed: newPlayer.speed,
-				foodMap: this.foodMap
+				foodMap: this.foodMap,
+				leaderBoard: this.leaderBoard.slice(0, 5)
 			});
 
 			socket.on(NetworkIds.INPUT, (data) => {
@@ -285,6 +310,13 @@ export class GameServer {
 					clientId: socket.id,
 					message: data
 				});
+			});
+
+			socket.on(NetworkIds.REQUEST_NAME, (data) => {
+				if (data) {
+					this.activeClients[socket.id].player.name = data;
+				}
+				socket.emit(NetworkIds.UPDATE_NAME, data);
 			});
 
 			socket.on('disconnect', () => {

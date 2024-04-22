@@ -1,8 +1,16 @@
 <script lang="ts">
+	import { playerName } from '$lib/shared/stores';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	$: show = false;
+	$: state = MenuStates.MainMenu;
+	$: name = '';
+
+	enum MenuStates {
+		MainMenu,
+		EnterName
+	}
 
 	onMount(async () => {
 		show = true;
@@ -12,6 +20,10 @@
 	onDestroy(() => {
 		show = false;
 	});
+
+	function setPlayerName() {
+		localStorage.setItem('slyther.io.playerName', name);
+	}
 </script>
 
 {#if show}
@@ -21,18 +33,45 @@
 		</div>
 
 		<!-- Main Menu -->
-		<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
-			<div class="menu shadow">
-				<a class="menuButton shadow" href="/game">New Game</a>
-				<a class="menuButton shadow" href="/">High Scores</a>
-				<a class="menuButton shadow" href="/">Controls</a>
-				<a class="menuButton shadow" href="/">Settings</a>
-				<a class="menuButton shadow" href="/">Credits</a>
+		{#if state == MenuStates.MainMenu}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<button
+						class="menuButton shadow"
+						on:click={() => {
+							state = MenuStates.EnterName;
+						}}>New game</button
+					>
+					<a class="menuButton shadow" href="/">High Scores</a>
+					<a class="menuButton shadow" href="/">Controls</a>
+					<a class="menuButton shadow" href="/">Settings</a>
+					<a class="menuButton shadow" href="/">Credits</a>
+				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Name select -->
-		<!-- <div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer"></div> -->
+		{#if state == MenuStates.EnterName}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<div class="nameInputContainer">
+						<label for="playerNameInput">Enter your name</label>
+						<input type="text" bind:value={name} id="playerNameInput" />
+					</div>
+					<div class="controlButtons">
+						<button
+							class="menuButton shadow"
+							on:click={() => {
+								state = MenuStates.MainMenu;
+							}}
+						>
+							Back
+						</button>
+						<a href="/game" class="menuButton shadow" on:click={setPlayerName}> Next</a>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Tutorial Message -->
 
@@ -78,9 +117,7 @@
 	.menu {
 		display: flex;
 		flex-direction: column;
-		height: 30vh;
 		width: 20vw;
-		align-items: stretch;
 		justify-content: space-evenly;
 		align-content: center;
 		flex-wrap: nowrap;
@@ -88,6 +125,7 @@
 		background: var(--c1);
 		border: 8px solid var(--c2);
 		border-radius: 2rem;
+		align-items: stretch;
 	}
 
 	.menuButton {
@@ -111,5 +149,25 @@
 	.menuButton:hover {
 		opacity: 1;
 		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
+	}
+
+	.controlButtons {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		align-items: center;
+		align-content: center;
+		flex-wrap: nowrap;
+		margin: 1rem 0 0 0;
+	}
+
+	.nameInputContainer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		align-content: center;
+		flex-wrap: nowrap;
+		margin: 0 0 1rem 0;
 	}
 </style>
