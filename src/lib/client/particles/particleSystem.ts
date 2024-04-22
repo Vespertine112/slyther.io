@@ -16,6 +16,7 @@ export class ParticleSystem {
 	private dpiScaledParticleSize: number;
 
 	position: Position; // NOTE: Represents the position of the system. This will dyamically change! Most likely the 'live' position of another entity!
+	direction: number = 0; // Direction of system in radians
 	generateParticles: boolean = false;
 	offAfterTimer: number = 0;
 	systemLifeTime = 0;
@@ -64,7 +65,7 @@ export class ParticleSystem {
 	/**
 	 * Update the state of all particles.  This includes removing any that have exceeded their lifetime.
 	 */
-	update(elapsedTime: number, numParticles?: number = 1) {
+	update(elapsedTime: number, numParticles?: number) {
 		this.particles = this.particles.filter((particle) => {
 			particle.timeAlive += elapsedTime;
 
@@ -85,7 +86,7 @@ export class ParticleSystem {
 		}
 
 		if (this.generateParticles) {
-			this.createAndAddParticles(numParticles);
+			this.createAndAddParticles(numParticles ?? 1);
 		}
 
 		this.systemLifeTime += elapsedTime;
@@ -127,6 +128,7 @@ export class ParticleSystem {
 	turnOn() {
 		this.offAfterTimer = 0;
 		this.offAfterFlag = false;
+		this.generateParticles = true;
 	}
 
 	/**

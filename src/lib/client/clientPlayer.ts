@@ -4,6 +4,7 @@ import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
 import { Player, PlayerStates } from '$lib/shared/player';
 import { MusicManager } from './music';
+import type { ParticleSystem } from './particles/particleSystem';
 
 export class ClientPlayer extends Player {
 	head!: Entity;
@@ -11,6 +12,7 @@ export class ClientPlayer extends Player {
 	tail!: Entity;
 
 	musicManager: MusicManager = MusicManager.getInstance();
+	particleSystem!: ParticleSystem;
 
 	constructor(
 		clientId: string,
@@ -46,10 +48,22 @@ export class ClientPlayer extends Player {
 	}
 
 	/**
-	 * Client-side eat method. Mostly just plays the bite sound
+	 * Client-side eat method. Mostly just plays the bite sound & throws particles
 	 */
 	eat() {
 		this.musicManager.playSound('biteSound', false);
+		this.particleSystem.turnOn();
+		this.particleSystem.turnOffAfter(100);
+	}
+
+	update(elapsedTime: number) {
+		super.update(elapsedTime);
+
+		// Update particleSystem pos
+		let sysPos = new Position(this.positions[0].x + this.size / 2, this.positions[0].y + this.size / 2);
+		this.particleSystem?.updateSystemPosition(sysPos);
+		this.particleSystem.direction = this.directions[0];
+		this.particleSystem?.update(elapsedTime);
 	}
 
 	private initalizeBodyEntities(bodyEntitySpec: { head: Entity; body: Entity; tail: Entity } | undefined) {

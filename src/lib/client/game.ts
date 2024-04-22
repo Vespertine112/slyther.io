@@ -9,6 +9,7 @@ import { Renderer } from './renderer';
 import { PlayerStates } from '$lib/shared/player';
 import { ParticleSystem } from './particles/particleSystem';
 import { MusicManager } from './music';
+import { Random } from '$lib/shared/random';
 
 export enum GameStatusEnum {
 	Playing,
@@ -152,8 +153,6 @@ export class Game {
 	}
 
 	update(elapsedTime: number) {
-		this.canvasChangeHookForTerrain();
-
 		this.playerSelf?.update(elapsedTime);
 
 		// This filter both updates & removes the particleSystems
@@ -174,6 +173,8 @@ export class Game {
 		this.renderer?.updateWorldCoverage();
 
 		this.renderer?.renderBackgroundTiles();
+
+		this.playerSelf?.particleSystem?.render();
 
 		this.particleSystems.forEach((ps) => {
 			ps.render();
@@ -308,27 +309,6 @@ export class Game {
 		this.socket.disconnect();
 	}
 
-	canvasChangeHookForTerrain() {
-		if (this.canvasSizeHasChanged()) {
-			this.updatePositionsAndSizeForCanvasChange();
-			this.updateOldCanvasWithNew();
-		}
-	}
-
-	private updatePositionsAndSizeForCanvasChange() {
-		const scaleY = this.canvas.height / this.oldCanvas.height;
-		const scaleX = this.canvas.width / this.oldCanvas.width;
-	}
-
-	private updateOldCanvasWithNew() {
-		this.oldCanvas.height = this.canvas.height;
-		this.oldCanvas.width = this.canvas.width;
-	}
-
-	private canvasSizeHasChanged() {
-		return this.canvas.height != this.oldCanvas.height || this.canvas.width != this.oldCanvas.width;
-	}
-
 	private connectPlayerSelf(data) {
 		this.playerSelf = new ClientPlayer(
 			this.socket.id!,
@@ -341,6 +321,32 @@ export class Game {
 		);
 		this.renderer = new Renderer(this.canvas, this.playerSelf);
 		this.foodMap = data.foodMap;
+
+		let eatParticles = function () {
+			let degrees = (this.direction * 180) / Math.PI;
+			degrees -= 90;
+
+			let inverseAngle = (degrees + 180) % 360;
+			let totalSpreadAngle = 75;
+			let halfAngle = totalSpreadAngle / 2;
+
+			let minAngle = (inverseAngle - halfAngle + 360) % 360;
+			let maxAngle = (inverseAngle + halfAngle) % 360;
+			if (minAngle > maxAngle) {
+				minAngle -= 360;
+			}
+
+			const randomAngle = Random.nextRandomBetween(minAngle, maxAngle);
+			const angleInRadians = randomAngle * (Math.PI / 180);
+			const x = Math.cos(angleInRadians);
+			const y = Math.sin(angleInRadians);
+
+			let newVec = new Vector(y, -x).mult(Random.nextRandomBetween(1 / 600, 1 / 800));
+			return newVec;
+		};
+
+		let ps = new ParticleSystem(this.canvas, this.playerSelf.positions[0], this.renderer, false, eatParticles);
+		this.playerSelf.particleSystem = ps;
 	}
 
 	private connectPlayerOther(data) {

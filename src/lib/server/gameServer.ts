@@ -105,7 +105,7 @@ export class GameServer {
 
 		// Add food to map (only if players are playing)
 		if (Object.entries(this.foodMap).length < this.maximumFood && Object.entries(this.activeClients).length > 0) {
-			this.foodsAdded = this.foodsAdded.concat(this.addFoodToMap(1));
+			this.addRandomFoodToMap(1);
 		}
 
 		// Perform collision checks for all snakes
@@ -114,14 +114,14 @@ export class GameServer {
 			if (player.state != PlayerStates.ALIVE) continue;
 			let hasCollided = false;
 
-			// Check player in world boundaries
+			// WORLD BOUNDARY CHECK
 			let playerHeadPos = player.positions[0];
 			if (playerHeadPos.x < 0 || playerHeadPos.x > 1 || playerHeadPos.y < 0 || playerHeadPos.y > 1) {
 				player.state = PlayerStates.DEAD;
 				hasCollided = true;
 			}
 
-			// Check against other snake bodies
+			// OTHER SNAKE CHECK
 			if (!hasCollided) {
 				for (let otherClientId in this.activeClients) {
 					let otherPlayer = this.activeClients[otherClientId].player;
@@ -141,9 +141,16 @@ export class GameServer {
 			}
 
 			if (hasCollided) {
+				this.placeFoodOnDeadPlayersBody(clientId);
 				this.log(`[Player Died] ${clientId}`);
 			}
 		}
+	}
+
+	private placeFoodOnDeadPlayersBody(clientId: string) {
+		const player = this.activeClients[clientId].player;
+		const foodSize = 6;
+		this.addSpecificFoodToMap(player.positions, foodSize);
 	}
 
 	updateClients(elapsedTime: number) {
@@ -300,14 +307,14 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		this.addFoodToMap(this.maximumFood);
+		this.addRandomFoodToMap(this.maximumFood);
 	}
 
 	/*
 	 * Adds numFood to the food map
 	 * @returns Array of all ids added
 	 */
-	private addFoodToMap(numFood: number): Food[] {
+	private addRandomFoodToMap(numFood: number) {
 		let foodAssetNames: string[] = [];
 		let addedFoods: Food[] = [];
 		for (let { name } of foodFiles) {
@@ -329,7 +336,45 @@ export class GameServer {
 			this.foodCounter++;
 		}
 
-		return addedFoods;
+		this.foodsAdded = this.foodsAdded.concat(addedFoods);
+	}
+
+	/*
+	 * Adds numFood to the food map
+	 * @param posArr - array of positions to place the foods
+	 * @param foodSize - total size of each food
+	 * @returns Array of all ids added
+	 */
+	private addSpecificFoodToMap(posArr: Position[], foodSize: number) {
+		let foodAssetNames: string[] = [];
+		let addedFoods: Food[] = [];
+		for (let { name } of foodFiles) {
+			foodAssetNames.push(name);
+		}
+		let randomName = foodAssetNames[Math.floor(foodAssetNames.length * Math.random())];
+
+		for (let i = 0; i < posArr.length; i++) {
+			this.foodMap[`${this.foodCounter}`] = new Food(
+				`${this.foodCounter}`,
+				randomName,
+				foodSize,
+				new Position(posArr[i].x, posArr[i].y),
+				FoodType.REGULAR
+			);
+			addedFoods.push(this.foodMap[`${this.foodCounter}`]);
+
+			this.foodCounter++;
+		}
+
+		this.foodsAdded = this.foodsAdded.concat(addedFoods);
+	}
+
+	private generateEatVector(angleInRadians: number, magnitude: number): Vector {
+		const thrustX = -magnitude * Math.cos(angleInRadians);
+		const thrustY = magnitude * Math.sin(angleInRadians);
+		const thrustVector = new Vector(thrustY, thrustX);
+
+		return thrustVector;
 	}
 
 	private log(...s: string[]) {
