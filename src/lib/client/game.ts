@@ -23,7 +23,8 @@ export enum GameStatusEnum {
  */
 export class Game {
 	playerScore: number = 0;
-	playerRank: number = 1;
+	playerRank = 1;
+	playerBestRank = 1;
 	playTime: number = 0;
 	gameState: GameStatusEnum = GameStatusEnum.Idle;
 
@@ -90,6 +91,7 @@ export class Game {
 				case NetworkIds.UPDATE_LEADERBOARD:
 					this.leaderBoard = message.data.top5;
 					this.playerRank = message.data.rank;
+					if (this.playerRank > this.playerBestRank) this.playerBestRank = this.playerRank;
 					break;
 				case NetworkIds.UPDATE_OTHER:
 					this.updatePlayerOther(message.data);

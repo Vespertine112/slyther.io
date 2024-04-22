@@ -133,10 +133,14 @@
 			<div class="displayPane" in:blur={{ amount: 10, duration: 1500 }}>
 				<div class="losepane">
 					<h1>You Zigged, but shoulda Zagged!</h1>
-					<h3>Good Try</h3>
+
 					<p>Score: {game.playerScore}</p>
-					<button class="menuButton" on:click={() => updateHighScores()}>Submit Score</button>
-					<a class="menuButton" on:click={() => updateHighScores(true)} href="/">Main Menu</a>
+					<p>Highest Rank: {game.playerBestRank}</p>
+
+					<div class="controlButtons">
+						<button class="menuButton shadow" on:click={() => updateHighScores()}>Submit Score</button>
+						<a class="menuButton shadow" on:click={() => updateHighScores(true)} href="/">Main Menu</a>
+					</div>
 				</div>
 			</div>
 		{/if}
@@ -270,5 +274,16 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
+	}
+
+	.controlButtons {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		align-items: center;
+		align-content: center;
+		flex-wrap: nowrap;
+		margin: 1rem 0 0 0;
+		min-width: 80%;
 	}
 </style>

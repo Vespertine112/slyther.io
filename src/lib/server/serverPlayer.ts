@@ -4,14 +4,24 @@ import { Queue } from '../shared/queue';
 import { Player } from '../shared/player';
 
 export class ServerPlayer extends Player {
+	invincibilityTimer: number;
+
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
 		this.length = 5;
 		this.speed = 0.00008;
 		this.size = 1 / 100;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
+		/** Players start invincible for (n)ms **/
+		this.invincibilityTimer = 20000;
 
 		this.createBodyParts();
+	}
+
+	update(elapsedTime: number) {
+		super.update(elapsedTime);
+
+		this.invincibilityTimer -= elapsedTime;
 	}
 
 	private createBodyParts() {

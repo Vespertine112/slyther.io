@@ -111,7 +111,7 @@ export class GameServer {
 		// Perform collision checks for all snakes
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
-			if (player.state != PlayerStates.ALIVE) continue;
+			if (player.state != PlayerStates.ALIVE || player.invincibilityTimer > 0) continue;
 			let hasCollided = false;
 
 			// WORLD BOUNDARY CHECK
@@ -178,7 +178,7 @@ export class GameServer {
 		for (let i = 0; i < newLeaderboard.length; i++) {
 			const player = newLeaderboard[i];
 
-			if (player.name !== this.leaderBoard.at(i)?.name) {
+			if (player.name !== this.leaderBoard.at(i)?.name || this.leaderBoard.length != newLeaderboard.length) {
 				leaderboardChanged = true;
 				this.leaderBoard = newLeaderboard;
 				break;
@@ -335,7 +335,7 @@ export class GameServer {
 	}
 
 	private getValidPostitionForNewPlayer(): Position {
-		return new Position(0.5, 0.5);
+		return new Position(Random.nextRandomBetween(0.01, 0.99), Random.nextRandomBetween(0.01, 0.99));
 	}
 
 	private initalizeFoodMap() {
