@@ -5,6 +5,7 @@ import { Player } from '../shared/player';
 
 export class ServerPlayer extends Player {
 	invincibilityTimer: number;
+	reportedAsDead: boolean = false;
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
@@ -13,7 +14,7 @@ export class ServerPlayer extends Player {
 		this.size = 1 / 100;
 		this.directions.push(Random.getRandomInt(Math.PI * 2)); // Random direction in radians
 		/** Players start invincible for (n)ms **/
-		this.invincibilityTimer = 20000;
+		this.invincibilityTimer = 5000;
 
 		this.createBodyParts();
 	}

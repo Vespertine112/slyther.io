@@ -19,7 +19,6 @@ export class Player {
 	directions: number[] = []; // Direction(s) in radians for each body part
 
 	reportUpdate: boolean = false;
-	reportedAsDead: boolean = false;
 	eatenFoods: string[] = [];
 	lastUpdate: number = 0;
 

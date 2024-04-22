@@ -44,7 +44,7 @@ export class GameServer {
 			const currentTime = performance.now();
 			const elapsedTime = currentTime - lastTime;
 
-			if (elapsedTime > 60) {
+			if (elapsedTime > 30) {
 				this.log(`[Warning] Frame Time: ${Math.trunc(elapsedTime)}`);
 			}
 
@@ -111,7 +111,7 @@ export class GameServer {
 		// Perform collision checks for all snakes
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
-			if (player.state != PlayerStates.ALIVE || player.invincibilityTimer > 0) continue;
+			if (player.state != PlayerStates.ALIVE) continue;
 			let hasCollided = false;
 
 			// WORLD BOUNDARY CHECK
@@ -122,7 +122,7 @@ export class GameServer {
 			}
 
 			// OTHER SNAKE CHECK
-			if (!hasCollided) {
+			if (!hasCollided && !(player.invincibilityTimer > 0)) {
 				for (let otherClientId in this.activeClients) {
 					let otherPlayer = this.activeClients[otherClientId].player;
 					if (clientId == otherClientId || otherPlayer.state != PlayerStates.ALIVE) continue;
@@ -200,7 +200,7 @@ export class GameServer {
 				client.player.reportedAsDead = true;
 
 				for (let otherId in this.activeClients) {
-					if (otherId !== clientId && this.activeClients[otherId].player.state !== PlayerStates.DEAD) {
+					if (otherId !== clientId) {
 						this.activeClients[otherId].socket.emit(NetworkIds.PLAYER_DEATH_OTHER, { clientId: clientId });
 					}
 				}
