@@ -8,6 +8,7 @@ import { ClientPlayer } from '$lib/client/clientPlayer';
 import { Renderer } from './renderer';
 import { PlayerStates } from '$lib/shared/player';
 import { ParticleSystem } from './particles/particleSystem';
+import { MusicManager } from './music';
 
 export enum GameStatusEnum {
 	Playing,
@@ -29,6 +30,7 @@ export class Game {
 	private renderer!: Renderer;
 	private inputManager!: InputManager;
 	private particleSystems: ParticleSystem[] = [];
+	private musicManager: MusicManager = MusicManager.getInstance();
 
 	private socket: Socket;
 	private messageId = 0;
@@ -82,11 +84,14 @@ export class Game {
 				case NetworkIds.UPDATE_OTHER:
 					this.updatePlayerOther(message.data);
 					break;
+				case NetworkIds.PLAYER_SELF_ATE:
+					this.playerSelf.eat();
+					break;
 				case NetworkIds.UPDATE_FOODMAP:
 					this.updateFoodMap(message.data);
 					break;
 				case NetworkIds.PLAYER_DEATH_SELF:
-					this.playerSelf.state = PlayerStates.DEAD;
+					this.playerDiedSelf(message.data);
 					break;
 				case NetworkIds.PLAYER_DEATH_OTHER:
 					this.otherPlayerDied(message.data);
@@ -96,22 +101,40 @@ export class Game {
 	}
 
 	/**
-	 * Hook for another player dying
-	 * Removes other player, and places particle systems
+	 * Hook for player self dying
 	 */
-	private otherPlayerDied(data: any) {
-		let playerHeadPos = this.playerOthers[data.clientId].positions[0];
+	private playerDiedSelf(data) {
+		this.playerSelf.state = PlayerStates.DEAD;
 
+		let playerHeadPos = this.playerSelf.positions[0];
 		let headExplosionPS = new ParticleSystem(
 			this.canvas,
 			new Position(playerHeadPos.x, playerHeadPos.y),
 			this.renderer,
 			true
 		);
-
 		headExplosionPS.turnOffAfter(125);
-
 		this.particleSystems.push(headExplosionPS);
+
+		this.musicManager?.playMusic('playerDeathSound', false);
+	}
+
+	/**
+	 * Hook for another player dying
+	 * Removes other player, plays death sound, and places particle systems
+	 */
+	private otherPlayerDied(data: any) {
+		let playerHeadPos = this.playerOthers[data.clientId].positions[0];
+		let headExplosionPS = new ParticleSystem(
+			this.canvas,
+			new Position(playerHeadPos.x, playerHeadPos.y),
+			this.renderer,
+			true
+		);
+		headExplosionPS.turnOffAfter(125);
+		this.particleSystems.push(headExplosionPS);
+
+		this.musicManager?.playMusic('playerDeathSound', false);
 
 		delete this.playerOthers[data.clientId];
 	}
@@ -131,7 +154,6 @@ export class Game {
 	update(elapsedTime: number) {
 		this.canvasChangeHookForTerrain();
 
-		this.playerSelf?.eat(this.foodMap);
 		this.playerSelf?.update(elapsedTime);
 
 		// This filter both updates & removes the particleSystems
@@ -166,7 +188,7 @@ export class Game {
 			this.renderer.renderPlayer(player);
 		}
 
-		if (this.playerSelf) {
+		if (this.playerSelf && this.playerSelf.state == PlayerStates.ALIVE) {
 			this.renderer.renderPlayer(this.playerSelf);
 		}
 	}
@@ -230,6 +252,7 @@ export class Game {
 			NetworkIds.UPDATE_SELF,
 			NetworkIds.UPDATE_OTHER,
 			NetworkIds.UPDATE_FOODMAP,
+			NetworkIds.PLAYER_SELF_ATE,
 			NetworkIds.PLAYER_DEATH_SELF,
 			NetworkIds.PLAYER_DEATH_OTHER
 		];

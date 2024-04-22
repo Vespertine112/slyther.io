@@ -164,6 +164,9 @@ export class GameServer {
 		// Update clients w/ new events & states
 		for (let clientId in this.activeClients) {
 			let client = this.activeClients[clientId];
+			if (client.player.eatenFoods.length > 0) {
+				client.socket.emit(NetworkIds.PLAYER_SELF_ATE);
+			}
 			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { new: this.foodsAdded, eaten: foodsEaten });
 
 			if (client.player.state == PlayerStates.DEAD && !client.player.reportedAsDead) {
@@ -185,7 +188,6 @@ export class GameServer {
 				speed: client.player.speed,
 				length: client.player.length,
 				size: client.player.size
-				// updateWindow: lastUpdate
 			};
 
 			if (client.player.reportUpdate) {
@@ -200,8 +202,6 @@ export class GameServer {
 					}
 				}
 			}
-
-			// Report any deaths to clients
 		}
 
 		for (let clientId in this.activeClients) {

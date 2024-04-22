@@ -45,6 +45,13 @@ export class ClientPlayer extends Player {
 		this.head.direction -= this.rotateRate * elapsedTime;
 	}
 
+	/**
+	 * Client-side eat method. Mostly just plays the bite sound
+	 */
+	eat() {
+		this.musicManager.playSound('biteSound', false);
+	}
+
 	private initalizeBodyEntities(bodyEntitySpec: { head: Entity; body: Entity; tail: Entity } | undefined) {
 		let renderSize = 30;
 		if (!bodyEntitySpec) {

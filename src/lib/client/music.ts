@@ -1,15 +1,23 @@
+import { browser } from '$app/environment';
+
 export type Music = {
 	biteFoodSound: HTMLAudioElement;
+	backgroundMusic: HTMLAudioElement;
 };
 
 // Singleton MusicManager
 export class MusicManager {
 	private static instance: MusicManager | null = null;
-	musicSet: Set<HTMLAudioElement> = new Set<HTMLAudioElement>();
-	private fadeOutIntervals: Map<HTMLAudioElement, number | undefined> = new Map();
-	private fadeOutSet: Set<HTMLAudioElement> = new Set<HTMLAudioElement>();
+	private audioContext: AudioContext;
+	private audioBuffers: Map<string, AudioBuffer> = new Map<string, AudioBuffer>();
+	private sourceNodes: Map<string, AudioBufferSourceNode> = new Map<string, AudioBufferSourceNode>();
 
-	private constructor() {}
+	private constructor() {
+		if (browser) {
+			this.audioContext = new AudioContext();
+		}
+	}
+
 	static getInstance(): MusicManager {
 		if (!MusicManager.instance) {
 			MusicManager.instance = new MusicManager();
@@ -17,48 +25,70 @@ export class MusicManager {
 		return MusicManager.instance;
 	}
 
-	addMusic(music: Music) {
-		Object.values(music).forEach((sound: HTMLAudioElement) => {
-			if (sound instanceof HTMLAudioElement) {
-				this.musicSet.add(sound);
-			} else {
-				console.error('Invalid audio element:', sound);
-			}
+	async loadMusic(name: string, url: string): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			fetch(url)
+				.then((response) => response.arrayBuffer())
+				.then((audioData) => this.audioContext.decodeAudioData(audioData))
+				.then((audioBuffer) => {
+					this.audioBuffers.set(name, audioBuffer);
+					resolve();
+				})
+				.catch((error) => {
+					console.error('Failed to load music:', error);
+					reject(error);
+				});
 		});
 	}
 
-	fadeOutMusic(audioElement: HTMLAudioElement, duration: number, volume: number) {
-		// Check if the audioElement is managed and currently playing
-		if (this.musicSet.has(audioElement) && this.fadeOutSet.has(audioElement)) {
-			// Reset volume to original value
-			audioElement.volume = volume;
-			// Clear existing fade-out interval
-			const fadeOutInterval = this.fadeOutIntervals.get(audioElement);
-			if (fadeOutInterval) {
-				clearInterval(fadeOutInterval);
-			}
+	playMusic(name: string, loop: boolean = false, volume: number = 1): void {
+		// Stop any currently playing music with the same name
+		this.stopMusic(name);
+
+		const audioBuffer = this.audioBuffers.get(name);
+		if (audioBuffer) {
+			const sourceNode = this.audioContext.createBufferSource();
+			sourceNode.buffer = audioBuffer;
+			sourceNode.loop = loop;
+
+			// Create a gain node to control the volume
+			const gainNode = this.audioContext.createGain();
+			gainNode.gain.value = volume;
+
+			// Connect nodes: source -> gain -> destination
+			sourceNode.connect(gainNode);
+			gainNode.connect(this.audioContext.destination);
+
+			sourceNode.start();
+			this.sourceNodes.set(name, sourceNode);
 		}
+	}
 
-		this.fadeOutSet.add(audioElement);
-		const initialVolume = audioElement.volume;
-		const steps = Math.ceil(duration / 50);
-		const stepVolume = initialVolume / steps;
+	playSound(name: string, loop: boolean = false, volume: number = 1): void {
+		const audioBuffer = this.audioBuffers.get(name);
+		if (audioBuffer) {
+			const sourceNode = this.audioContext.createBufferSource();
+			sourceNode.buffer = audioBuffer;
+			sourceNode.loop = loop;
 
-		const fadeOutInterval = setInterval(() => {
-			if (audioElement.volume - stepVolume <= 0) {
-				audioElement.pause();
-				audioElement.currentTime = 0;
-				audioElement.volume = volume; // Reset volume to original value
+			// Create a gain node to control the volume
+			const gainNode = this.audioContext.createGain();
+			gainNode.gain.value = volume;
 
-				clearInterval(fadeOutInterval);
-				this.fadeOutIntervals.delete(audioElement);
-				this.fadeOutSet.delete(audioElement);
-			} else {
-				audioElement.volume -= stepVolume;
-			}
-		}, 50);
+			// Connect nodes: source -> gain -> destination
+			sourceNode.connect(gainNode);
+			gainNode.connect(this.audioContext.destination);
 
-		// Store fade-out interval reference
-		this.fadeOutIntervals.set(audioElement, fadeOutInterval);
+			sourceNode.start();
+			this.sourceNodes.set(name, sourceNode);
+		}
+	}
+
+	stopMusic(name: string): void {
+		const sourceNode = this.sourceNodes.get(name);
+		if (sourceNode) {
+			sourceNode.stop();
+			this.sourceNodes.delete(name);
+		}
 	}
 }

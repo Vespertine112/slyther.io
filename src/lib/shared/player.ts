@@ -110,7 +110,10 @@ export class Player {
 			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
 			const deltaY = this.positions[i].prev!.y - this.positions[i].y;
 
-			const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			const absDx = Math.abs(deltaX);
+			const absDy = Math.abs(deltaY);
+
+			const distance = Math.sqrt(absDx * absDx + absDy * absDy);
 			const ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
 
 			if (distance > 0) {
