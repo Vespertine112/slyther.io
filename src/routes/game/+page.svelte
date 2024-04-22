@@ -46,6 +46,12 @@
 
 		game.initalizeGame(canvas, inputManager);
 		gameLoop(performance.now());
+
+		if (false) {
+			canvas.requestFullscreen().catch((err) => {
+				console.warn('Failed setting fullscreen', err);
+			});
+		}
 	});
 
 	onDestroy(() => {
@@ -109,6 +115,7 @@
 		background: rgb(00, 00, 00, 0.3);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
+		z-index: 100;
 	}
 
 	.scoreCard {

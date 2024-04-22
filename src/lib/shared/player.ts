@@ -19,7 +19,8 @@ export class Player {
 	directions: number[] = []; // Direction(s) in radians for each body part
 
 	reportUpdate: boolean = false;
-	eatenFoods: Food[] = [];
+	reportedAsDead: boolean = false;
+	eatenFoods: string[] = [];
 	lastUpdate: number = 0;
 
 	/**
@@ -66,12 +67,12 @@ export class Player {
 	eat(foodMap: { [foodId: string]: Food }) {
 		if (this.state != PlayerStates.ALIVE) return;
 
-		let foodsAte: Food[] = [];
+		let foodsEaten: string[] = [];
 		for (let foodId in foodMap) {
 			let food = foodMap[foodId];
 
 			if (this.headCollisionCheck(food.position)) {
-				foodsAte.push(food);
+				foodsEaten.push(foodId);
 
 				this.reportUpdate = true;
 				this.length += Math.floor(food.size);
@@ -89,11 +90,11 @@ export class Player {
 		}
 
 		// Delete eaten foods from the food map
-		foodsAte.forEach((food) => {
-			delete foodMap[food.name];
+		foodsEaten.forEach((food) => {
+			delete foodMap[food];
 		});
 
-		this.eatenFoods = foodsAte;
+		this.eatenFoods = foodsEaten;
 	}
 
 	// Continue movement based on current time

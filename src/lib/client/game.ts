@@ -7,6 +7,7 @@ import { Queue } from '$lib/shared/queue';
 import { ClientPlayer } from '$lib/client/clientPlayer';
 import { Renderer } from './renderer';
 import { PlayerStates } from '$lib/shared/player';
+import { ParticleSystem } from './particles/particleSystem';
 
 export enum GameStatusEnum {
 	Playing,
@@ -27,6 +28,7 @@ export class Game {
 	private oldCanvas!: { width: number; height: number }; // Tracks canvas changes to re-size terrain on dynamic changes
 	private renderer!: Renderer;
 	private inputManager!: InputManager;
+	private particleSystems: ParticleSystem[] = [];
 
 	private socket: Socket;
 	private messageId = 0;
@@ -35,6 +37,7 @@ export class Game {
 
 	private playerSelf!: ClientPlayer;
 	private playerOthers: { [clientId: string]: ClientPlayer } = {};
+
 	private foodMap: { [foodId: string]: Food } = {};
 
 	inputLatency = 0;
@@ -80,15 +83,48 @@ export class Game {
 					this.updatePlayerOther(message.data);
 					break;
 				case NetworkIds.UPDATE_FOODMAP:
-					this.foodMap = message.data.foodMap;
+					this.updateFoodMap(message.data);
 					break;
 				case NetworkIds.PLAYER_DEATH_SELF:
 					this.playerSelf.state = PlayerStates.DEAD;
 					break;
 				case NetworkIds.PLAYER_DEATH_OTHER:
-					delete this.playerOthers[message.data.clientId];
+					this.otherPlayerDied(message.data);
 					break;
 			}
+		}
+	}
+
+	/**
+	 * Hook for another player dying
+	 * Removes other player, and places particle systems
+	 */
+	private otherPlayerDied(data: any) {
+		let playerHeadPos = this.playerOthers[data.clientId].positions[0];
+
+		let headExplosionPS = new ParticleSystem(
+			this.canvas,
+			new Position(playerHeadPos.x, playerHeadPos.y),
+			this.renderer,
+			true
+		);
+
+		headExplosionPS.turnOffAfter(125);
+
+		this.particleSystems.push(headExplosionPS);
+
+		delete this.playerOthers[data.clientId];
+	}
+
+	private updateFoodMap(data) {
+		for (let i = 0; i < data.eaten.length; i++) {
+			const foodId = data.eaten[i];
+			delete this.foodMap[foodId];
+		}
+
+		for (let i = 0; i < data.new.length; i++) {
+			const food = data.new[i];
+			this.foodMap[food.name] = food;
 		}
 	}
 
@@ -96,6 +132,13 @@ export class Game {
 		this.canvasChangeHookForTerrain();
 
 		this.playerSelf?.update(elapsedTime);
+
+		// This filter both updates & removes the particleSystems
+		// The systems should only be around for 1.5 s
+		this.particleSystems = this.particleSystems.filter((ps) => {
+			ps.update(elapsedTime, 5);
+			return ps.systemLifeTime < 1500;
+		});
 
 		for (let id in this.playerOthers) {
 			this.playerOthers[id].eat(this.foodMap);
@@ -109,6 +152,10 @@ export class Game {
 		this.renderer?.updateWorldCoverage();
 
 		this.renderer?.renderBackgroundTiles();
+
+		this.particleSystems.forEach((ps) => {
+			ps.render();
+		});
 
 		for (let name in this.foodMap) {
 			this.renderer.renderFood(this.foodMap[name]);
@@ -155,7 +202,6 @@ export class Game {
 		if (!this.messageHistory.empty) {
 			this.inputLatency = performance.now() - this.messageHistory.front?.currentTime;
 		}
-		// console.log(this.inputLatency);
 
 		while (!this.messageHistory.empty) {
 			let message = this.messageHistory.dequeue();

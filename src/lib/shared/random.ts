@@ -29,7 +29,7 @@ export const Random = {
 		const blue = Random.nextRandomBetween(0, 60);
 
 		// Construct the color string in RGBA format
-		const color = `rgba(${red}, ${green}, ${blue}, 0.9)`;
+		const color = `rgba(${red}, ${green}, ${blue}, 1)`;
 
 		return color;
 	},

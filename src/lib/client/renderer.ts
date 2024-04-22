@@ -3,10 +3,12 @@ import type { ClientPlayer } from '$lib/client/clientPlayer';
 import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
 import { foodFiles } from '$lib/shared/misc';
+import type { ParticleSystem } from './particles/particleSystem';
 
 export class Renderer {
 	ctx: CanvasRenderingContext2D;
 	private foodEntities: { [foodName: string]: Entity } = {};
+	private particleSystems: ParticleSystem[] = [];
 
 	/**
 	 * Tile Entites are the background of the world.
@@ -18,7 +20,7 @@ export class Renderer {
 	 * tileWorldCoverage determines how much of the
 	 * a tile should covers (world units, i.e. < 1)
 	 */
-	private tileWorldCoverage: number = 1 / 20;
+	private tileWorldCoverage: number = 1 / 40;
 
 	/**
 	 * The viewport only covers a square of the overall world.
@@ -244,7 +246,7 @@ export class Renderer {
 	/**
 	 * Translates a given world position to an accurate canvas position
 	 */
-	private translateGamePositionToCanvas(pos: Position): Position {
+	translateGamePositionToCanvas(pos: Position): Position {
 		let scaleRatio = Math.max(this.canvas.width, this.canvas.height);
 		let cw = this.canvas.width / scaleRatio;
 		let ch = this.canvas.height / scaleRatio;
@@ -272,9 +274,16 @@ export class Renderer {
 		return len * theoreticWorldLengthInPixels;
 	}
 
+	/**
+	 * Adds a particle system to the renderer
+	 */
+	addParticleSystem(ps: ParticleSystem) {
+		this.particleSystems.push(ps);
+	}
+
 	private initBackgroundTileEntities() {
 		let backgroundSprite = new Sprite(
-			'assets/backgrounds/Leaf_tile.png',
+			'assets/backgrounds/Mossy_Brick_tile.png',
 			{ render: true },
 			{
 				animate: false,
@@ -294,7 +303,7 @@ export class Renderer {
 		);
 
 		let edgeSprite = new Sprite(
-			'assets/backgrounds/Lava_tile.png',
+			'assets/backgrounds/Dirt_tile.png',
 			{ render: true },
 			{
 				animate: false,

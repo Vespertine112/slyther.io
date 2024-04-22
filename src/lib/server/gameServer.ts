@@ -25,10 +25,14 @@ export class GameServer {
 
 	/** Global food map - Players modify this during update! */
 	private foodMap: { [foodId: string]: Food } = {};
-	private maximumFood = 2000;
+	private maximumFood = 1000;
 	private foodCounter = 0;
+	/** Tracks which foods are dynamically added during a loop */
+	private foodsAdded: Food[] = [];
 
-	constructor() {}
+	constructor() {
+		this.foodMap = {};
+	}
 
 	gameLoop() {
 		let lastTime = performance.now();
@@ -48,6 +52,8 @@ export class GameServer {
 			this.update(elapsedTime, currentTime);
 			this.updateClients(elapsedTime);
 
+			this.foodsAdded = [];
+
 			lastTime = currentTime;
 
 			const nextInterval = Math.min(1, elapsedTime); // Ensure at least 1 ms interval. If it runs too fast we loop-out the server lol
@@ -58,11 +64,11 @@ export class GameServer {
 	}
 
 	initalizeGame(socketServer: Server) {
+		this.initalizeFoodMap();
+
 		this.initalizeSocketIO(socketServer);
 
 		this.log('Game Server Started');
-
-		this.initalizeFoodMap();
 
 		this.gameLoop();
 	}
@@ -91,15 +97,15 @@ export class GameServer {
 	}
 
 	update(elapsedTime: number, currentTime: number) {
-		// Add food to map
-		if (Object.entries(this.foodMap).length < this.maximumFood) {
-			this.addFoodToMap(1);
-		}
-
 		// Perform Client update actions
 		for (let clientId in this.activeClients) {
 			this.activeClients[clientId].player.update(elapsedTime);
 			this.activeClients[clientId].player.eat(this.foodMap);
+		}
+
+		// Add food to map (only if players are playing)
+		if (Object.entries(this.foodMap).length < this.maximumFood && Object.entries(this.activeClients).length > 0) {
+			this.foodsAdded = this.foodsAdded.concat(this.addFoodToMap(1));
 		}
 
 		// Perform collision checks for all snakes
@@ -142,7 +148,7 @@ export class GameServer {
 
 	updateClients(elapsedTime: number) {
 		// Aggregate consumed foods & Player Deaths
-		let foodsEaten: Food[] = [];
+		let foodsEaten: string[] = [];
 		let deadPlayers: string[] = [];
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
@@ -151,22 +157,18 @@ export class GameServer {
 			}
 
 			if (player.eatenFoods.length > 0) {
-				foodsEaten.concat(player.eatenFoods);
+				foodsEaten = foodsEaten.concat(player.eatenFoods);
 			}
-		}
-
-		// Remove consumed foods from map;
-		for (let idx = 0; idx < foodsEaten.length; idx++) {
-			delete this.foodMap[foodsEaten[idx].name];
 		}
 
 		// Update clients w/ new events & states
 		for (let clientId in this.activeClients) {
 			let client = this.activeClients[clientId];
-			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { foodMap: this.foodMap });
+			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { new: this.foodsAdded, eaten: foodsEaten });
 
-			if (client.player.state == PlayerStates.DEAD) {
+			if (client.player.state == PlayerStates.DEAD && !client.player.reportedAsDead) {
 				client.socket.emit(NetworkIds.PLAYER_DEATH_SELF);
+				client.player.reportedAsDead = true;
 
 				for (let otherId in this.activeClients) {
 					if (otherId !== clientId && this.activeClients[otherId].player.state !== PlayerStates.DEAD) {
@@ -298,18 +300,23 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		this.addFoodToMap(1000);
+		// this.addFoodToMap(100);
 	}
 
-	private addFoodToMap(numFood: number) {
-		let names: string[] = [];
+	/*
+	 * Adds numFood to the food map
+	 * @returns Array of all ids added
+	 */
+	private addFoodToMap(numFood: number): Food[] {
+		let foodAssetNames: string[] = [];
+		let addedFoods: Food[] = [];
 		for (let { name } of foodFiles) {
-			names.push(name);
+			foodAssetNames.push(name);
 		}
 
 		for (let i = 0; i < numFood; i++) {
-			let randomName = names[Math.floor(names.length * Math.random())];
-			this.foodCounter++;
+			let randomName = foodAssetNames[Math.floor(foodAssetNames.length * Math.random())];
+
 			this.foodMap[`${this.foodCounter}`] = new Food(
 				`${this.foodCounter}`,
 				randomName,
@@ -317,7 +324,12 @@ export class GameServer {
 				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1)),
 				FoodType.REGULAR
 			);
+			addedFoods.push(this.foodMap[`${this.foodCounter}`]);
+
+			this.foodCounter++;
 		}
+
+		return addedFoods;
 	}
 
 	private log(...s: string[]) {

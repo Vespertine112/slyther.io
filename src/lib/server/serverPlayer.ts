@@ -4,8 +4,6 @@ import { Queue } from '../shared/queue';
 import { Player } from '../shared/player';
 
 export class ServerPlayer extends Player {
-	eatenFoods: Food[] = [];
-
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
 		this.length = 5;

@@ -25,6 +25,7 @@
 				<a class="menuButton shadow" href="/game">New Game</a>
 				<a class="menuButton shadow" href="/">High Scores</a>
 				<a class="menuButton shadow" href="/">Controls</a>
+				<a class="menuButton shadow" href="/">Settings</a>
 				<a class="menuButton shadow" href="/">Credits</a>
 			</div>
 		</div>
