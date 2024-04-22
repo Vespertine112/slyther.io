@@ -131,6 +131,7 @@ export class Game {
 	update(elapsedTime: number) {
 		this.canvasChangeHookForTerrain();
 
+		this.playerSelf?.eat(this.foodMap);
 		this.playerSelf?.update(elapsedTime);
 
 		// This filter both updates & removes the particleSystems
@@ -141,7 +142,6 @@ export class Game {
 		});
 
 		for (let id in this.playerOthers) {
-			this.playerOthers[id].eat(this.foodMap);
 			this.playerOthers[id].update(elapsedTime);
 		}
 

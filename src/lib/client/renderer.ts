@@ -283,7 +283,7 @@ export class Renderer {
 
 	private initBackgroundTileEntities() {
 		let backgroundSprite = new Sprite(
-			'assets/backgrounds/Mossy_Brick_tile.png',
+			'assets/backgrounds/Leaf_tile.png',
 			{ render: true },
 			{
 				animate: false,

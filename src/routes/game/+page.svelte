@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Game } from '$lib/client/game';
+	import { MusicManager } from '$lib/client/music';
 	import InputManager from '$lib/inputManager';
 	import { onDestroy, onMount, tick } from 'svelte';
 
@@ -17,9 +18,14 @@
 	const mouseMoveHandler = inputManager.mouseMove.bind(inputManager);
 	const mouseUpHandler = inputManager.mouseUp.bind(inputManager);
 
+	let biteFoodSound: HTMLAudioElement;
+
 	onMount(async () => {
 		show = true;
 		await tick();
+
+		let musicManager = MusicManager.getInstance();
+		musicManager.addMusic({ biteFoodSound });
 
 		function gameLoop(time: number) {
 			const elapsedTime = time - lastTimestamp;
@@ -90,6 +96,11 @@
 
 		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
 	</div>
+
+	<audio id="winSound" bind:this={biteFoodSound}>
+		<source src="assets/sounds/biteFood.mp3" type="audio/mpeg" />
+		Your browser does not support the audio element.
+	</audio>
 {/if}
 
 <style>

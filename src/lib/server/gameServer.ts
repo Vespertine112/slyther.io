@@ -300,7 +300,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		// this.addFoodToMap(100);
+		this.addFoodToMap(this.maximumFood);
 	}
 
 	/*

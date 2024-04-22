@@ -1,13 +1,16 @@
 import { Random } from '../shared/random';
-import { Position } from '../shared/gameTypes';
+import { Food, Position } from '../shared/gameTypes';
 import { Entity } from './entites/entity';
 import Sprite from './entites/sprite';
-import { Player } from '$lib/shared/player';
+import { Player, PlayerStates } from '$lib/shared/player';
+import { MusicManager } from './music';
 
 export class ClientPlayer extends Player {
 	head!: Entity;
 	body!: Entity;
 	tail!: Entity;
+
+	musicManager: MusicManager = MusicManager.getInstance();
 
 	constructor(
 		clientId: string,

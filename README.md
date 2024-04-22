@@ -16,6 +16,5 @@
     -   User defined
     -   Mouse / Dynamic Keyboard / Standard Keyboard
 -   Particles
-    -   Particles at head on Death
     -   Particles at head on Eat
 -   Scores persisted to browser
