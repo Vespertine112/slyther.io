@@ -110,10 +110,7 @@ export class Player {
 			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
 			const deltaY = this.positions[i].prev!.y - this.positions[i].y;
 
-			const absDx = Math.abs(deltaX);
-			const absDy = Math.abs(deltaY);
-
-			const distance = Math.sqrt(absDx * absDx + absDy * absDy);
+			const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 			const ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
 
 			if (distance > 0) {
@@ -123,7 +120,7 @@ export class Player {
 			}
 
 			// Check if the body part has reached its target position
-			if (distance <= this.speed * elapsedTime) {
+			if (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
 				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			}
 		}
