@@ -9,8 +9,11 @@
     -   Score
     -   Kills
     -   Highest Leaderboard positions
-    -   Game continues under panel
 -   Controls setup
     -   User defined
     -   Mouse / Dynamic Keyboard / Standard Keyboard
 -   Scores persisted to browser
+
+# Bugs / Known Issues:
+
+-   Body segments can detach and become stuck at 0,0

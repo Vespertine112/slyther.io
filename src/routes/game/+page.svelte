@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { Game } from '$lib/client/game';
+	import { browser } from '$app/environment';
+	import { Game, GameStatusEnum } from '$lib/client/game';
 	import { MusicManager, type Music } from '$lib/client/music';
 	import InputManager from '$lib/inputManager';
 	import { onDestroy, onMount, tick } from 'svelte';
+	import { blur } from 'svelte/transition';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
@@ -20,6 +22,16 @@
 
 	let biteFoodSound: HTMLAudioElement;
 	let backgroundMusic: HTMLAudioElement;
+
+	let highScores: { name: string; score: number }[] = [];
+
+	// Grab the stored scores
+	if (browser) {
+		const storedHighScores: any = localStorage.getItem('slyther.io.highScores');
+		if (storedHighScores) {
+			highScores = JSON.parse(storedHighScores);
+		}
+	}
 
 	onMount(async () => {
 		show = true;
@@ -45,7 +57,9 @@
 
 			game = game;
 
-			requestAnimationFrame(gameLoop);
+			if (game.gameState != GameStatusEnum.Idle) {
+				requestAnimationFrame(gameLoop);
+			}
 		}
 
 		let musicManager = MusicManager.getInstance();
@@ -68,6 +82,15 @@
 	onDestroy(() => {
 		game.exit();
 	});
+
+	function updateHighScores(justGoHome: boolean = false) {
+		if (!justGoHome) {
+			highScores.push({ name: 'joe', score: game.playerScore });
+			highScores.sort((a, b) => b.score - a.score);
+
+			localStorage.setItem('slyther.io.highScores', JSON.stringify(highScores));
+		}
+	}
 </script>
 
 <svelte:window
@@ -87,6 +110,7 @@
 			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
 		</div>
 
+		<!-- Leaderboard -->
 		<div class="leaderBoard">
 			<h3 class="displayText" style="margin: 0;">Leaderboard</h3>
 			<hr style="width: 100%" />
@@ -99,6 +123,20 @@
 			</ol>
 		</div>
 
+		<!-- Lose Panel -->
+		{#if game.gameState == GameStatusEnum.Lost}
+			<div class="displayPane" in:blur={{ amount: 10, duration: 1500 }}>
+				<div class="losepane">
+					<h1>You Zigged, but shoulda Zagged!</h1>
+					<h3>Good Try</h3>
+					<p>Score: {game.playerScore}</p>
+					<button class="menuButton" on:click={() => updateHighScores()}>Submit Score</button>
+					<a class="menuButton" on:click={() => updateHighScores(true)} href="/">Main Menu</a>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Game Canvas -->
 		<canvas id="renderCanvas" bind:this={canvas}> </canvas>
 	</div>
 
@@ -148,6 +186,7 @@
 		flex-wrap: nowrap;
 		align-content: center;
 		align-items: center;
+		z-index: 100;
 	}
 
 	.leaderBoard {
@@ -163,10 +202,61 @@
 		flex-wrap: wrap;
 		align-items: center;
 		justify-content: flex-start;
+		z-index: 100;
+	}
+
+	.losepane {
+		color: var(--c1);
+		display: flex;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-content: center;
+		align-items: center;
+		justify-content: flex-start;
+		background: rgb(00, 00, 00, 0.6);
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
+	}
+
+	.menuButton {
+		background-color: #f4511e;
+		border: none;
+		color: white;
+		padding: 16px 32px;
+		text-align: center;
+		font-size: 16px;
+		margin: 4px 2px;
+		opacity: 0.85;
+		color: var(--c3);
+		transition: 0.5s;
+		display: inline-block;
+		text-decoration: none;
+		cursor: pointer;
+		border-radius: 2rem;
+		font-weight: bold;
+	}
+
+	.menuButton:hover {
+		opacity: 1;
+		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
 	}
 
 	.displayText {
 		color: white;
 		text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
+	}
+
+	.displayPane {
+		backdrop-filter: blur(2px) brightness(0.75);
+		position: absolute;
+		display: flex;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-content: center;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
 	}
 </style>

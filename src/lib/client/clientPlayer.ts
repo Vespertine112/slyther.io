@@ -60,10 +60,12 @@ export class ClientPlayer extends Player {
 		super.update(elapsedTime);
 
 		// Update particleSystem pos
-		let sysPos = new Position(this.positions[0].x + this.size / 2, this.positions[0].y + this.size / 2);
-		this.particleSystem?.updateSystemPosition(sysPos);
-		this.particleSystem.direction = this.directions[0];
-		this.particleSystem?.update(elapsedTime);
+		if (this.particleSystem) {
+			let sysPos = new Position(this.positions[0].x + this.size / 2, this.positions[0].y + this.size / 2);
+			this.particleSystem.updateSystemPosition(sysPos);
+			this.particleSystem.direction = this.directions[0];
+			this.particleSystem.update(elapsedTime);
+		}
 	}
 
 	private initalizeBodyEntities(bodyEntitySpec: { head: Entity; body: Entity; tail: Entity } | undefined) {

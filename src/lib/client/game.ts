@@ -59,6 +59,8 @@ export class Game {
 		this.setupSocketListeners();
 
 		this.registerKeyboardHandlers();
+
+		this.gameState = GameStatusEnum.Playing;
 	}
 
 	processInput(elapsedTime: number) {
@@ -118,6 +120,8 @@ export class Game {
 		this.particleSystems.push(headExplosionPS);
 
 		this.musicManager?.playMusic('playerDeathSound', false);
+
+		this.gameState = GameStatusEnum.Lost;
 	}
 
 	/**

@@ -20,6 +20,7 @@
 			<h1 style="margin:0">Slyther.io</h1>
 		</div>
 
+		<!-- Main Menu -->
 		<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 			<div class="menu shadow">
 				<a class="menuButton shadow" href="/game">New Game</a>
@@ -29,6 +30,13 @@
 				<a class="menuButton shadow" href="/">Credits</a>
 			</div>
 		</div>
+
+		<!-- Name select -->
+		<!-- <div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer"></div> -->
+
+		<!-- Tutorial Message -->
+
+		<!-- Joining Spinner -->
 
 		<div class="footer"></div>
 	</div>
