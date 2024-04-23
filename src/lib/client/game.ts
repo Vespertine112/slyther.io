@@ -97,7 +97,12 @@ export class Game {
 					this.updatePlayerOther(message.data);
 					break;
 				case NetworkIds.UPDATE_NAME:
-					this.playerSelf.name = message.data;
+					if (message.data.clientId == this.playerSelf.clientId) {
+						this.playerSelf.name = message.data;
+					} else {
+						this.playerOthers[message.data.clientId].name = message.data.name;
+					}
+
 					break;
 				case NetworkIds.PLAYER_SELF_ATE:
 					this.playerSelf.eat();
@@ -203,6 +208,7 @@ export class Game {
 		for (let id in this.playerOthers) {
 			let player = this.playerOthers[id];
 			this.renderer.renderPlayer(player);
+			this.renderer.renderPlayerName(player);
 		}
 
 		if (this.playerSelf && this.playerSelf.state == PlayerStates.ALIVE) {
@@ -378,6 +384,7 @@ export class Game {
 			data.rotateRate,
 			data.size
 		);
+		player.name = data.name;
 		player.lastUpdate = performance.now();
 
 		this.playerOthers[data.clientId] = player;

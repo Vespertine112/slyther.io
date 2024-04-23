@@ -133,6 +133,22 @@ export class Renderer {
 		}
 	}
 
+	renderPlayerName(player: ClientPlayer) {
+		const playerName = player.name;
+
+		this.ctx.font = '18px Arial';
+		this.ctx.fillStyle = 'white';
+
+		const adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
+		const canvasPos = this.translateGamePositionToCanvas(player.positions[0]);
+		this.ctx.textAlign = 'center';
+
+		const textX = canvasPos.x + adjustedPlayerSize / 2;
+		const textY = canvasPos.y - adjustedPlayerSize / 2 - 10;
+
+		this.ctx.fillText(playerName, textX, textY);
+	}
+
 	/**
 	 * Renders a food item on the canvas.
 	 * @param food The food item to render.

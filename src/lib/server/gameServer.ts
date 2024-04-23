@@ -254,7 +254,8 @@ export class GameServer {
 						rotateRate: newPlayer.rotateRate,
 						speed: newPlayer.speed,
 						length: newPlayer.length,
-						size: newPlayer.size
+						size: newPlayer.size,
+						name: newPlayer.name
 					});
 
 					socket.emit(NetworkIds.CONNECT_OTHER, {
@@ -264,7 +265,8 @@ export class GameServer {
 						rotateRate: client.player.rotateRate,
 						speed: client.player.speed,
 						length: client.player.length,
-						size: client.player.size
+						size: client.player.size,
+						name: client.player.name
 					});
 				}
 			}
@@ -316,7 +318,12 @@ export class GameServer {
 				if (data) {
 					this.activeClients[socket.id].player.name = data;
 				}
-				socket.emit(NetworkIds.UPDATE_NAME, data);
+				for (let clientId in this.activeClients) {
+					this.activeClients[clientId].socket.emit(NetworkIds.UPDATE_NAME, {
+						clientId: socket.id,
+						name: data
+					});
+				}
 			});
 
 			socket.on('disconnect', () => {
