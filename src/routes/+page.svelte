@@ -41,6 +41,7 @@
 		musicManager.loadMusic('playerDeathSound', 'assets/sounds/popSound.mp3');
 		musicManager.loadMusic('clickSound', 'assets/sounds/click.mp3');
 		musicManager.loadMusic('backgroundMusic', 'assets/sounds/backgroundMusic.mp3');
+		musicManager.loadMusic('boostSound', 'assets/sounds/boost.mp3');
 		musicManager.loadMusic('menuMusic', 'assets/sounds/milk-shake.mp3').then((res) => {
 			musicManager.playMusic('menuMusic', false, 0.25, 5);
 		});
@@ -189,15 +190,15 @@
 								<td>Brayden Hill</td>
 							</tr>
 							<tr>
-								<td>"Neon Gaming"</td>
+								<td>"The Other Side"</td>
 								<td>
 									<a
-										href="https://pixabay.com/users/dopestuff-30965024/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=128925"
-										>dopestuff</a
+										href="https://pixabay.com/users/coma-media-24399569/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=175173"
+										>Yurii Semchyshyn</a
 									>
 									from
 									<a
-										href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=128925"
+										href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=175173"
 										>Pixabay</a
 									>
 								</td>

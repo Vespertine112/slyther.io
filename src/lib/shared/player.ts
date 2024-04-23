@@ -76,6 +76,7 @@ export class Player {
 
 				this.reportUpdate = true;
 				this.length += Math.floor(food.size);
+				if (this.size < 1 / 30) this.size += 1 / 50000;
 
 				// Calculate offset for new body part
 				const offsetX = Math.cos(this.directions[this.positions.length - 1]) * this.bodyOffset;
@@ -85,7 +86,11 @@ export class Player {
 				const lastPos = this.positions[this.positions.length - 1];
 				const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
 				newPos.prev = new Position(lastPos.x, lastPos.y);
+
+				const newDir = Math.atan2(newPos.y - lastPos.y, newPos.x - lastPos.x);
+
 				this.positions.push(newPos);
+				this.directions.push(newDir);
 			}
 		}
 

@@ -95,7 +95,7 @@ export class ParticleSystem {
 	render() {
 		const ctx = this.canvas.getContext('2d')!;
 
-		// Draw circles for each particle
+		// Draw squares for each particle
 		for (let idx = 0; idx < this.particles.length; idx++) {
 			const particle = this.particles[idx];
 
@@ -103,12 +103,12 @@ export class ParticleSystem {
 			if (particle.color) color = particle.color;
 
 			let translatedPos = this.renderer.translateGamePositionToCanvas(particle.position);
+			const halfWidth = particle.width! / 2;
 
-			ctx.beginPath();
-			ctx.arc(translatedPos.x, translatedPos.y, particle.width! / 2, 0, Math.PI * 2);
-			ctx.fillStyle = color; // Adjust color and transparency as needed
-			ctx.fill();
-			ctx.closePath();
+			ctx.fillStyle = color; // Set fill color
+
+			// Draw square
+			ctx.fillRect(translatedPos.x - halfWidth, translatedPos.y - halfWidth, 10, 10);
 		}
 	}
 

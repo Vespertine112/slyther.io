@@ -346,7 +346,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		this.addRandomFoodToMap(this.maximumFood);
+		// this.addRandomFoodToMap(this.maximumFood);
 	}
 
 	/*

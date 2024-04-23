@@ -129,8 +129,8 @@
 				<div class="losepane">
 					<h1>You Zigged, but shoulda Zagged!</h1>
 
-					<p>Score: {game.playerScore}</p>
-					<p>Highest Rank: {game.playerBestRank}</p>
+					<h3>Score: {game.playerScore}</h3>
+					<h3>Highest Rank: {game.playerBestRank}</h3>
 
 					<div class="controlButtons">
 						<a
@@ -236,7 +236,7 @@
 		align-items: center;
 		justify-content: flex-start;
 		background: rgb(00, 00, 00, 0.6);
-		padding: 0.5rem;
+		padding: 2rem;
 		border-radius: 0.5rem;
 		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
 	}
