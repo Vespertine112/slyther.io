@@ -136,7 +136,7 @@ export class Renderer {
 	renderPlayerName(player: ClientPlayer) {
 		const playerName = player.name;
 
-		this.ctx.font = '18px Arial';
+		this.ctx.font = '18px Bungee Spice';
 		this.ctx.fillStyle = 'white';
 
 		const adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);

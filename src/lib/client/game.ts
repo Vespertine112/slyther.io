@@ -50,7 +50,6 @@ export class Game {
 
 	constructor() {
 		this.socket = io({ autoConnect: false });
-		this.socket.connect();
 	}
 
 	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager, playerName: string | null) {
@@ -64,6 +63,7 @@ export class Game {
 		this.registerKeyboardHandlers();
 
 		this.gameState = GameStatusEnum.Playing;
+		this.socket.connect();
 
 		this.socket.emit(NetworkIds.REQUEST_NAME, playerName);
 	}
