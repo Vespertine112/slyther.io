@@ -7,6 +7,8 @@
 		%sveltekit.head%
 	</head>
 	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
+
 		:root {
 			--c1: #fcaa67;
 			--c2: #b0413e;
@@ -18,12 +20,24 @@
 		body {
 			margin: 0;
 			background-color: var(--c5);
-
+			font-family: 'Bungee Spice', sans-serif;
+			font-weight: 400;
+			font-style: normal;
 			background-image: linear-gradient(to bottom right, var(--c5), var(--c4));
+		}
+
+		button {
+			font-family: 'Bungee Spice', sans-serif;
+			font-weight: 400;
+			font-style: normal;
 		}
 
 		.shadow {
 			box-shadow: 10px 8px 5px rgba(0, 0, 0, 0.4);
+		}
+
+		.textShadow {
+			text-shadow: 12px 8px 7px rgba(0, 0, 0, 0.8);
 		}
 
 		.menuContainer {
@@ -45,21 +59,21 @@
 			align-content: center;
 			flex-wrap: nowrap;
 			padding: 1rem;
-			background: var(--c1);
+			background: var(--c5);
 			border: 8px solid var(--c2);
 			border-radius: 2rem;
 			align-items: stretch;
 		}
 
 		.menuButton {
-			background-color: #f4511e;
+			background-color: var(--c1);
 			border: none;
 			color: white;
 			padding: 16px 32px;
 			text-align: center;
 			font-size: 16px;
-			margin: 4px 2px;
-			opacity: 0.75;
+			margin: 8px 2px;
+			opacity: 1;
 			color: var(--c3);
 			transition: 0.3s;
 			display: inline-block;
@@ -67,11 +81,16 @@
 			cursor: pointer;
 			border-radius: 2rem;
 			font-weight: bold;
+			text-shadow:
+				-1px -1px 0 #000,
+				1px -1px 0 #000,
+				-1px 1px 0 #000,
+				1px 1px 0 #000;
 		}
 
 		.menuButton:hover {
 			opacity: 1;
-			box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
+			box-shadow: 14px 12px 5px rgba(0, 0, 0, 0.6);
 			background-color: var(--c2);
 		}
 

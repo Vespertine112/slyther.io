@@ -7,18 +7,20 @@
 	import { Position } from '$lib/shared/gameTypes';
 	import { MusicManager } from '$lib/client/music';
 	import { browser } from '$app/environment';
+	import { Game } from '$lib/client/game';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
 	$: show = false;
 	$: state = MenuStates.MainMenu;
-	$: name = '';
+	let name = '';
 	let canvas: HTMLCanvasElement;
 	let highScores: { name: string; score: number }[] = [];
 
-	// Grab the stored scores
+	// Grab the stored scores & name
 	if (browser) {
 		const storedHighScores: any = localStorage.getItem('slyther.io.highScores');
+		name = localStorage.getItem('slyther.io.playerName') || '';
 		if (storedHighScores) {
 			highScores = JSON.parse(storedHighScores);
 		}
@@ -48,6 +50,8 @@
 
 		let pl = new ClientPlayer('no', [new Position(0.5, 0.5)], [0], 1, 0, 0, 1 / 100);
 		let rend = new Renderer(canvas, pl);
+		let game = new Game();
+		game.addRandomFoodToMap(200);
 
 		function gameLoop(time: number) {
 			// Needed for fully-reactive canvas
@@ -57,6 +61,9 @@
 			}
 
 			rend.renderBackgroundTiles();
+			for (let id in game.foodMap) {
+				rend.renderFood(game.foodMap[id]);
+			}
 
 			requestAnimationFrame(gameLoop);
 		}
@@ -81,7 +88,7 @@
 {#if show}
 	<div class="container" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
 		<div in:fly={{ x: -200, duration: 1000 }} class="topbar shadow">
-			<h1 style="margin:0">Slyther.io</h1>
+			<h1 style="margin:0" class="textShadow">Slyther.io</h1>
 		</div>
 
 		<!-- Main Menu -->
@@ -95,7 +102,13 @@
 					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.HighScores)}
 						>High Scores</button
 					>
-					<a class="menuButton shadow" href="/">Controls</a>
+
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.HighScores)}
+						>Controls</button
+					>
+
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.Settings)}>Settings</button
+					>
 
 					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.Credits)}>Credits</button>
 				</div>
@@ -106,8 +119,8 @@
 		{#if state == MenuStates.EnterName}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
-					<div class="nameInputContainer">
-						<label for="playerNameInput" style="font-size: 1.5rem; margin: 0 0 0.5rem 0; font-weight: bold;"
+					<div class="nameInputContainer textShadow">
+						<label for="playerNameInput" style="font-size: 1.5rem; margin: 0 0 1rem 0; font-weight: bold;"
 							>Enter your name</label
 						>
 						<input type="text" bind:value={name} id="playerNameInput" />
@@ -126,13 +139,33 @@
 
 		<!-- Joining Spinner -->
 
+		<!-- High Scores -->
 		{#if state == MenuStates.HighScores}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
 					<div class="scores">
 						{#each highScores as score}
-							<h3>{score.name} - {score.score}</h3>
+							<h3 class="textShadow">{score.name} - {score.score}</h3>
 						{/each}
+					</div>
+
+					<div class="controlButtons">
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
+							Back
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Settings -->
+		{#if state == MenuStates.Settings}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<div class="scores">
+						<h3>Full-Screen</h3>
+						<p>*Full-Screen Zen-Mode (no HUD)*</p>
+						<h3>Sound?</h3>
 					</div>
 
 					<div class="controlButtons">
@@ -148,7 +181,7 @@
 		{#if state == MenuStates.Credits}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
-					<table>
+					<table class="textShadow">
 						<thead>
 							<tr>
 								<th>Description</th>
@@ -250,7 +283,7 @@
 		flex-direction: column;
 		align-items: center;
 		color: var(--c4);
-		background: var(--c1);
+		background: var(--c5);
 		margin: 1em;
 		border: 8px solid var(--c2);
 		border-radius: 2rem;
@@ -274,7 +307,7 @@
 		justify-content: flex-start;
 		align-content: center;
 		flex-wrap: nowrap;
-		margin: 0 0 1rem 0;
+		color: var(--c5);
 	}
 
 	#renderCanvas {
@@ -296,6 +329,5 @@
 	}
 	.scores > h3 {
 		margin: 0.5rem 0 0.5rem 0;
-		text-shadow: 12px 8px 7px rgba(0, 0, 0, 0.8);
 	}
 </style>

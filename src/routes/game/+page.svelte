@@ -128,9 +128,11 @@
 			<div class="displayPane" in:blur={{ amount: 10, duration: 1500 }}>
 				<div class="losepane">
 					<h1>You Zigged, but shoulda Zagged!</h1>
-
-					<h3>Score: {game.playerScore}</h3>
-					<h3>Highest Rank: {game.playerBestRank}</h3>
+					<hr style="width: 100%;" />
+					<div style="display: flex; flex-direction: row; width: 100%; justify-content: center;">
+						<h3 style="margin-right: 1rem;">Score: {game.playerScore}</h3>
+						<h3 style="margin-left: 1rem;">Highest Rank: {game.playerBestRank}</h3>
+					</div>
 
 					<div class="controlButtons">
 						<a
@@ -176,7 +178,7 @@
 		flex-direction: row;
 		left: 0.5rem;
 		bottom: 0.5rem;
-		background: rgb(00, 00, 00, 0.3);
+		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		z-index: 100;
@@ -188,7 +190,7 @@
 		flex-direction: row;
 		right: 0.5rem;
 		bottom: 0.5rem;
-		background: rgb(00, 00, 00, 0.3);
+		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		z-index: 100;
@@ -201,7 +203,7 @@
 		left: 45%;
 		right: 45%;
 		top: 0.5rem;
-		background: rgb(00, 00, 00, 0.3);
+		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		justify-content: center;
@@ -217,7 +219,7 @@
 		flex-direction: column;
 		top: 0.5rem;
 		right: 0.5rem;
-		background: rgb(00, 00, 00, 0.3);
+		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		align-content: space-around;
@@ -242,7 +244,6 @@
 	}
 
 	.menuButton {
-		background-color: #f4511e;
 		border: none;
 		color: white;
 		padding: 16px 32px;

@@ -1,10 +1,10 @@
-import { Vector, Position, Food, FoodType } from '../shared/gameTypes';
+import { Position, Food, FoodType } from '../shared/gameTypes';
 import type { Server, Socket } from 'socket.io';
 import { NetworkIds } from '../shared/network-ids';
 import { ServerPlayer } from './serverPlayer';
 import { Queue } from '../shared/queue';
 import { Random } from '../shared/random';
-import { Player, PlayerStates } from '../shared/player';
+import { PlayerStates } from '../shared/player';
 import { foodFiles } from '../shared/misc';
 
 interface Client {
@@ -406,14 +406,6 @@ export class GameServer {
 		}
 
 		this.foodsAdded = this.foodsAdded.concat(addedFoods);
-	}
-
-	private generateEatVector(angleInRadians: number, magnitude: number): Vector {
-		const thrustX = -magnitude * Math.cos(angleInRadians);
-		const thrustY = magnitude * Math.sin(angleInRadians);
-		const thrustVector = new Vector(thrustY, thrustX);
-
-		return thrustVector;
 	}
 
 	private log(...s: string[]) {

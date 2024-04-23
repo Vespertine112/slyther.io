@@ -1,4 +1,4 @@
-import { Food, Position, Vector } from '$lib/shared/gameTypes';
+import { Food, FoodType, Position, Vector } from '$lib/shared/gameTypes';
 import type InputManager from '$lib/inputManager';
 import { CustomCommands } from '$lib/inputManager';
 import { Socket, io } from 'socket.io-client';
@@ -10,6 +10,7 @@ import { PlayerStates } from '$lib/shared/player';
 import { ParticleSystem } from './particles/particleSystem';
 import { MusicManager } from './music';
 import { Random } from '$lib/shared/random';
+import { foodFiles } from '$lib/shared/misc';
 
 export enum GameStatusEnum {
 	Playing,
@@ -42,7 +43,7 @@ export class Game {
 
 	private playerSelf!: ClientPlayer;
 	private playerOthers: { [clientId: string]: ClientPlayer } = {};
-	private foodMap: { [foodId: string]: Food } = {};
+	foodMap: { [foodId: string]: Food } = {};
 	leaderBoard: { name: string; clientId: string; length: number }[] = [];
 
 	inputLatency = 0;
@@ -392,5 +393,28 @@ export class Game {
 
 	private disconnectPlayerOther(data) {
 		delete this.playerOthers[data.clientId];
+	}
+
+	/**
+	 * This method is only exposed for usage in the main menu! Don't call this without prior knowledge going on...
+	 */
+	addRandomFoodToMap(numFood: number) {
+		let foodAssetNames: string[] = [];
+		let addedFoods: Food[] = [];
+		for (let { name } of foodFiles) {
+			foodAssetNames.push(name);
+		}
+
+		for (let i = 0; i < numFood; i++) {
+			let randomName = foodAssetNames[Math.floor(foodAssetNames.length * Math.random())];
+
+			this.foodMap[`${i}`] = new Food(
+				`${i}`,
+				randomName,
+				Random.nextRandomBetween(4, 7),
+				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1)),
+				FoodType.REGULAR
+			);
+		}
 	}
 }
