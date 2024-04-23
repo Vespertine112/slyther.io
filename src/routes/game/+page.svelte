@@ -79,6 +79,8 @@
 		let musicManager = MusicManager.getInstance();
 		musicManager.loadMusic('biteSound', 'assets/sounds/biteFood.mp3');
 		musicManager.loadMusic('playerDeathSound', 'assets/sounds/popSound.mp3');
+		musicManager.loadMusic('clickSound', 'assets/sounds/click.mp3');
+		musicManager.loadMusic('boostSound', 'assets/sounds/boost.mp3');
 		musicManager.loadMusic('backgroundMusic', 'assets/sounds/backgroundMusic.mp3').then((res) => {
 			musicManager.playMusic('backgroundMusic', true, 0.5, 5);
 		});
