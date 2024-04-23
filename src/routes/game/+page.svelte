@@ -69,17 +69,11 @@
 		musicManager.loadMusic('biteSound', 'assets/sounds/biteFood.mp3');
 		musicManager.loadMusic('playerDeathSound', 'assets/sounds/popSound.mp3');
 		musicManager.loadMusic('backgroundMusic', 'assets/sounds/backgroundMusic.mp3').then((res) => {
-			musicManager.playMusic('backgroundMusic', true, 0.5);
+			musicManager.playMusic('backgroundMusic', true, 0.5, 5);
 		});
 
 		game.initalizeGame(canvas, inputManager, playerName);
 		gameLoop(performance.now());
-
-		if (false) {
-			canvas.requestFullscreen().catch((err) => {
-				console.warn('Failed setting fullscreen', err);
-			});
-		}
 	});
 
 	onDestroy(() => {
@@ -87,11 +81,12 @@
 	});
 
 	function updateHighScores(justGoHome: boolean = false) {
-		if (!justGoHome) {
-			highScores.push({ name: 'joe', score: game.playerScore });
+		if (!justGoHome && game.playerScore > 0) {
+			highScores.push({ name: playerName || 'Unknown', score: game.playerScore });
 			highScores.sort((a, b) => b.score - a.score);
 
 			localStorage.setItem('slyther.io.highScores', JSON.stringify(highScores));
+			game.playerScore = 0;
 		}
 	}
 </script>
@@ -138,8 +133,19 @@
 					<p>Highest Rank: {game.playerBestRank}</p>
 
 					<div class="controlButtons">
-						<button class="menuButton shadow" on:click={() => updateHighScores()}>Submit Score</button>
-						<a class="menuButton shadow" on:click={() => updateHighScores(true)} href="/">Main Menu</a>
+						<a
+							class="menuButton shadow"
+							on:click={() => {
+								MusicManager.getInstance().playSound('clickSound', false, 0.75);
+								return updateHighScores();
+							}}
+							href="/">Submit Score</a
+						>
+						<a
+							class="menuButton shadow"
+							on:click={() => MusicManager.getInstance().playSound('clickSound', false, 0.75)}
+							href="/">Main Menu</a
+						>
 					</div>
 				</div>
 			</div>
@@ -256,6 +262,7 @@
 	.menuButton:hover {
 		opacity: 1;
 		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
+		background-color: var(--c2);
 	}
 
 	.displayText {

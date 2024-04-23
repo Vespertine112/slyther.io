@@ -2,19 +2,65 @@
 	import { playerName } from '$lib/shared/stores';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { Renderer } from '$lib/client/renderer';
+	import { ClientPlayer } from '$lib/client/clientPlayer';
+	import { Position } from '$lib/shared/gameTypes';
+	import { MusicManager } from '$lib/client/music';
+	import { browser } from '$app/environment';
 
+	$: canvasWidth = 100;
+	$: canvasHeight = 100;
 	$: show = false;
 	$: state = MenuStates.MainMenu;
 	$: name = '';
+	let canvas: HTMLCanvasElement;
+	let highScores: { name: string; score: number }[] = [];
+
+	// Grab the stored scores
+	if (browser) {
+		const storedHighScores: any = localStorage.getItem('slyther.io.highScores');
+		if (storedHighScores) {
+			highScores = JSON.parse(storedHighScores);
+		}
+	}
 
 	enum MenuStates {
 		MainMenu,
-		EnterName
+		EnterName,
+		Credits,
+		Settings,
+		HighScores
 	}
 
 	onMount(async () => {
 		show = true;
 		await tick();
+
+		let musicManager = MusicManager.getInstance();
+		musicManager.loadMusic('biteSound', 'assets/sounds/biteFood.mp3');
+		musicManager.loadMusic('playerDeathSound', 'assets/sounds/popSound.mp3');
+		musicManager.loadMusic('clickSound', 'assets/sounds/click.mp3');
+		musicManager.loadMusic('backgroundMusic', 'assets/sounds/backgroundMusic.mp3');
+		musicManager.loadMusic('menuMusic', 'assets/sounds/milk-shake.mp3').then((res) => {
+			musicManager.playMusic('menuMusic', false, 0.25, 5);
+		});
+
+		let pl = new ClientPlayer('no', [new Position(0.5, 0.5)], [0], 1, 0, 0, 1 / 100);
+		let rend = new Renderer(canvas, pl);
+
+		function gameLoop(time: number) {
+			// Needed for fully-reactive canvas
+			if (canvas) {
+				canvas.width = canvasWidth;
+				canvas.height = canvasHeight;
+			}
+
+			rend.renderBackgroundTiles();
+
+			requestAnimationFrame(gameLoop);
+		}
+
+		gameLoop(performance.now());
 	});
 
 	onDestroy(() => {
@@ -24,10 +70,15 @@
 	function setPlayerName() {
 		localStorage.setItem('slyther.io.playerName', name);
 	}
+
+	function buttonClick(newState: MenuStates) {
+		MusicManager.getInstance().playSound('clickSound', false, 0.75);
+		state = newState;
+	}
 </script>
 
 {#if show}
-	<div class="container">
+	<div class="container" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
 		<div in:fly={{ x: -200, duration: 1000 }} class="topbar shadow">
 			<h1 style="margin:0">Slyther.io</h1>
 		</div>
@@ -36,16 +87,16 @@
 		{#if state == MenuStates.MainMenu}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
-					<button
-						class="menuButton shadow"
-						on:click={() => {
-							state = MenuStates.EnterName;
-						}}>New game</button
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.EnterName)}
+						>New game</button
 					>
-					<a class="menuButton shadow" href="/">High Scores</a>
+
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.HighScores)}
+						>High Scores</button
+					>
 					<a class="menuButton shadow" href="/">Controls</a>
-					<a class="menuButton shadow" href="/">Settings</a>
-					<a class="menuButton shadow" href="/">Credits</a>
+
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.Credits)}>Credits</button>
 				</div>
 			</div>
 		{/if}
@@ -55,16 +106,13 @@
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
 					<div class="nameInputContainer">
-						<label for="playerNameInput">Enter your name</label>
+						<label for="playerNameInput" style="font-size: 1.5rem; margin: 0 0 0.5rem 0; font-weight: bold;"
+							>Enter your name</label
+						>
 						<input type="text" bind:value={name} id="playerNameInput" />
 					</div>
 					<div class="controlButtons">
-						<button
-							class="menuButton shadow"
-							on:click={() => {
-								state = MenuStates.MainMenu;
-							}}
-						>
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
 							Back
 						</button>
 						<a href="/game" class="menuButton shadow" on:click={setPlayerName}> Next</a>
@@ -77,7 +125,113 @@
 
 		<!-- Joining Spinner -->
 
-		<div class="footer"></div>
+		{#if state == MenuStates.HighScores}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<div class="scores">
+						{#each highScores as score}
+							<h3>{score.name} - {score.score}</h3>
+						{/each}
+					</div>
+
+					<div class="controlButtons">
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
+							Back
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Credits -->
+		{#if state == MenuStates.Credits}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<table>
+						<thead>
+							<tr>
+								<th>Description</th>
+								<th>Source</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- Table rows -->
+							<tr>
+								<td>Lead Programmer</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead Designer</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead QA Tester</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead Project Manager</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead UI Designer</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead Animator</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead Level Designer</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>Lead Writer</td>
+								<td>Brayden Hill</td>
+							</tr>
+							<tr>
+								<td>"Neon Gaming"</td>
+								<td>
+									<a
+										href="https://pixabay.com/users/dopestuff-30965024/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=128925"
+										>dopestuff</a
+									>
+									from
+									<a
+										href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=128925"
+										>Pixabay</a
+									>
+								</td>
+							</tr>
+							<tr>
+								<td>"Milk Shake"</td>
+								<td>
+									<a
+										href="https://pixabay.com/users/coma-media-24399569/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=116330"
+										>Yurii Semchyshyn</a
+									>
+									from
+									<a
+										href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=116330"
+										>Pixabay</a
+									>
+								</td>
+							</tr>
+							<tr>
+								<td>Sound Effects </td>
+								<td><a href="https://www.Zapsplat.com" target="_">Zapsplat.com</a></td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="controlButtons">
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
+							Back
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<canvas bind:this={canvas} id="renderCanvas"></canvas>
 	</div>
 {/if}
 
@@ -103,62 +257,13 @@
 		padding: 4px 0 4px 0;
 	}
 
-	.menuContainer {
-		display: flex;
-		flex: 1 1 auto;
-		flex-direction: column;
-		flex-wrap: nowrap;
-		align-content: center;
-		align-items: center;
-		width: 100%;
-		justify-content: space-around;
-	}
-
-	.menu {
-		display: flex;
-		flex-direction: column;
-		width: 20vw;
-		justify-content: space-evenly;
-		align-content: center;
-		flex-wrap: nowrap;
-		padding: 1rem;
-		background: var(--c1);
-		border: 8px solid var(--c2);
+	#playerNameInput {
 		border-radius: 2rem;
-		align-items: stretch;
-	}
-
-	.menuButton {
-		background-color: #f4511e;
-		border: none;
-		color: white;
-		padding: 16px 32px;
-		text-align: center;
-		font-size: 16px;
-		margin: 4px 2px;
-		opacity: 0.75;
+		background-color: var(--c4);
+		font-size: 1rem;
 		color: var(--c3);
-		transition: 0.5s;
-		display: inline-block;
-		text-decoration: none;
-		cursor: pointer;
-		border-radius: 2rem;
-		font-weight: bold;
-	}
-
-	.menuButton:hover {
-		opacity: 1;
-		box-shadow: 14px 10px 5px rgba(0, 0, 0, 0.4);
-	}
-
-	.controlButtons {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-around;
-		align-items: center;
-		align-content: center;
-		flex-wrap: nowrap;
-		margin: 1rem 0 0 0;
+		text-align: center;
+		padding: 4px;
 	}
 
 	.nameInputContainer {
@@ -169,5 +274,27 @@
 		align-content: center;
 		flex-wrap: nowrap;
 		margin: 0 0 1rem 0;
+	}
+
+	#renderCanvas {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		z-index: -1;
+	}
+
+	.scores {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		align-content: center;
+		flex-wrap: nowrap;
+		justify-content: flex-start;
+		max-height: 30vh;
+		overflow-y: scroll;
+	}
+	.scores > h3 {
+		margin: 0.5rem 0 0.5rem 0;
+		text-shadow: 12px 8px 7px rgba(0, 0, 0, 0.8);
 	}
 </style>

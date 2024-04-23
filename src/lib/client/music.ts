@@ -8,9 +8,10 @@ export type Music = {
 // Singleton MusicManager
 export class MusicManager {
 	private static instance: MusicManager | null = null;
-	private audioContext: AudioContext;
+	private audioContext!: AudioContext;
 	private audioBuffers: Map<string, AudioBuffer> = new Map<string, AudioBuffer>();
 	private sourceNodes: Map<string, AudioBufferSourceNode> = new Map<string, AudioBufferSourceNode>();
+	private playingMusic!: string;
 
 	private constructor() {
 		if (browser) {
@@ -26,6 +27,7 @@ export class MusicManager {
 	}
 
 	async loadMusic(name: string, url: string): Promise<void> {
+		if (this.audioBuffers.get(name)) Promise.resolve();
 		return new Promise<void>((resolve, reject) => {
 			fetch(url)
 				.then((response) => response.arrayBuffer())
@@ -41,9 +43,9 @@ export class MusicManager {
 		});
 	}
 
-	playMusic(name: string, loop: boolean = false, volume: number = 1): void {
-		// Stop any currently playing music with the same name
-		this.stopMusic(name);
+	playMusic(name: string, loop: boolean = false, volume: number = 1, fadeDuration: number = 0): void {
+		// Stop any currently playing music
+		this.stopMusic(5);
 
 		const audioBuffer = this.audioBuffers.get(name);
 		if (audioBuffer) {
@@ -51,17 +53,19 @@ export class MusicManager {
 			sourceNode.buffer = audioBuffer;
 			sourceNode.loop = loop;
 
-			// Create a gain node to control the volume
 			const gainNode = this.audioContext.createGain();
-			gainNode.gain.value = volume;
+			gainNode.gain.value = 0;
 
-			// Connect nodes: source -> gain -> destination
 			sourceNode.connect(gainNode);
 			gainNode.connect(this.audioContext.destination);
+
+			gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + fadeDuration);
 
 			sourceNode.start();
 			this.sourceNodes.set(name, sourceNode);
 		}
+
+		this.playingMusic = name;
 	}
 
 	playSound(name: string, loop: boolean = false, volume: number = 1): void {
@@ -71,11 +75,9 @@ export class MusicManager {
 			sourceNode.buffer = audioBuffer;
 			sourceNode.loop = loop;
 
-			// Create a gain node to control the volume
 			const gainNode = this.audioContext.createGain();
 			gainNode.gain.value = volume;
 
-			// Connect nodes: source -> gain -> destination
 			sourceNode.connect(gainNode);
 			gainNode.connect(this.audioContext.destination);
 
@@ -84,11 +86,12 @@ export class MusicManager {
 		}
 	}
 
-	stopMusic(name: string): void {
-		const sourceNode = this.sourceNodes.get(name);
+	stopMusic(fadeDuration: number = 1): void {
+		if (!this.playingMusic) return;
+
+		const sourceNode = this.sourceNodes.get(this.playingMusic);
 		if (sourceNode) {
 			sourceNode.stop();
-			this.sourceNodes.delete(name);
 		}
 	}
 }
