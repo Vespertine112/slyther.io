@@ -51,7 +51,7 @@ export class ParticleSystem {
 					width: size,
 					height: size,
 					lifeLength: Random.nextGaussian(4, 1.2) * 500,
-					moveRatePerMs: 1 / (10000 * Random.nextGaussian()),
+					moveRatePerMs: (1 / 10000) * Random.nextGaussian(),
 					momentum: this.momentumGenCallback(),
 					color: Random.getRandomFireColor()
 				},

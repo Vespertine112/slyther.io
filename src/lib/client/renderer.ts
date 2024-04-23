@@ -35,13 +35,21 @@ export class Renderer {
 		public playerSelf: ClientPlayer
 	) {
 		this.ctx = canvas.getContext('2d')!;
-		this.updateWorldCoverage();
+		this.updateSizers();
 		this.initBackgroundTileEntities();
 		this.initFoodEntities();
 	}
 
-	updateWorldCoverage() {
+	fontSize = 24;
+	textHeight = 0;
+
+	updateSizers() {
 		this.worldCoverage = this.playerSelf.size * 30;
+
+		this.fontSize = Math.min(24, this.canvas.width / 20);
+		this.ctx.font = '18px Bungee Spice';
+		let metrics = this.ctx.measureText('M');
+		this.textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
 	}
 
 	/**
@@ -136,7 +144,7 @@ export class Renderer {
 	renderPlayerName(player: ClientPlayer) {
 		const playerName = player.name;
 
-		this.ctx.font = '18px Bungee Spice';
+		this.ctx.font = `${this.fontSize}px Bungee Spice`;
 		this.ctx.fillStyle = 'white';
 
 		const adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);

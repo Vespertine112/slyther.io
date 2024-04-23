@@ -27,7 +27,10 @@ export class MusicManager {
 	}
 
 	async loadMusic(name: string, url: string): Promise<void> {
-		if (this.audioBuffers.get(name)) Promise.resolve();
+		if (this.audioBuffers.get(name)) {
+			return Promise.resolve();
+		}
+
 		return new Promise<void>((resolve, reject) => {
 			fetch(url)
 				.then((response) => response.arrayBuffer())

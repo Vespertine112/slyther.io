@@ -52,8 +52,9 @@ export class ClientPlayer extends Player {
 	 */
 	eat() {
 		this.musicManager.playSound('biteSound', false);
+
 		this.particleSystem.turnOn();
-		this.particleSystem.turnOffAfter(100);
+		this.particleSystem.turnOffAfter(20);
 	}
 
 	update(elapsedTime: number) {
@@ -61,10 +62,11 @@ export class ClientPlayer extends Player {
 
 		// Update particleSystem pos
 		if (this.particleSystem) {
-			let sysPos = new Position(this.positions[0].x + this.size / 2, this.positions[0].y + this.size / 2);
-			this.particleSystem.updateSystemPosition(sysPos);
+			this.particleSystem.position.x = this.positions[0].x + this.size / 2;
+			this.particleSystem.position.y = this.positions[0].y + this.size / 2;
+
 			this.particleSystem.direction = this.directions[0];
-			this.particleSystem.update(elapsedTime);
+			this.particleSystem.update(elapsedTime, 3);
 		}
 	}
 

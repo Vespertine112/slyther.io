@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { playerName } from '$lib/shared/stores';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { Renderer } from '$lib/client/renderer';
@@ -34,6 +33,8 @@
 		HighScores
 	}
 
+	let game = new Game();
+	game.addRandomFoodToMap(200);
 	onMount(async () => {
 		show = true;
 		await tick();
@@ -50,8 +51,6 @@
 
 		let pl = new ClientPlayer('no', [new Position(0.5, 0.5)], [0], 1, 0, 0, 1 / 100);
 		let rend = new Renderer(canvas, pl);
-		let game = new Game();
-		game.addRandomFoodToMap(200);
 
 		function gameLoop(time: number) {
 			// Needed for fully-reactive canvas
@@ -72,6 +71,7 @@
 	});
 
 	onDestroy(() => {
+		game.exit();
 		show = false;
 	});
 
@@ -265,7 +265,7 @@
 			</div>
 		{/if}
 
-		<canvas bind:this={canvas} id="renderCanvas"></canvas>
+		<canvas bind:this={canvas} id="menuCanvas"></canvas>
 	</div>
 {/if}
 
@@ -310,7 +310,7 @@
 		color: var(--c5);
 	}
 
-	#renderCanvas {
+	#menuCanvas {
 		position: absolute;
 		width: 100%;
 		height: 100%;

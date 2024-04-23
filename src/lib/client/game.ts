@@ -23,14 +23,17 @@ export enum GameStatusEnum {
  * Game - All State for the lander game
  */
 export class Game {
+	gameState: GameStatusEnum = GameStatusEnum.Idle;
+	foodMap: { [foodId: string]: Food } = {};
+
+	inputLatency = 0;
+	leaderBoard: { name: string; clientId: string; length: number }[] = [];
+	playTime: number = 0;
 	playerScore: number = 0;
 	playerRank = 1;
 	playerBestRank = 1;
-	playTime: number = 0;
-	gameState: GameStatusEnum = GameStatusEnum.Idle;
 
 	private canvas!: HTMLCanvasElement;
-	private oldCanvas!: { width: number; height: number }; // Tracks canvas changes to re-size terrain on dynamic changes
 	private renderer!: Renderer;
 	private inputManager!: InputManager;
 	private particleSystems: ParticleSystem[] = [];
@@ -43,10 +46,6 @@ export class Game {
 
 	private playerSelf!: ClientPlayer;
 	private playerOthers: { [clientId: string]: ClientPlayer } = {};
-	foodMap: { [foodId: string]: Food } = {};
-	leaderBoard: { name: string; clientId: string; length: number }[] = [];
-
-	inputLatency = 0;
 
 	constructor() {
 		this.socket = io({ autoConnect: false });
@@ -54,8 +53,6 @@ export class Game {
 
 	initalizeGame(canvas: HTMLCanvasElement, inputManager: InputManager, playerName: string | null) {
 		this.canvas = canvas;
-
-		this.oldCanvas = { width: canvas.width, height: canvas.height };
 		this.inputManager = inputManager;
 
 		this.setupSocketListeners();
@@ -63,6 +60,7 @@ export class Game {
 		this.registerKeyboardHandlers();
 
 		this.gameState = GameStatusEnum.Playing;
+
 		this.socket.connect();
 
 		this.socket.emit(NetworkIds.REQUEST_NAME, playerName);
@@ -192,7 +190,7 @@ export class Game {
 	}
 
 	render() {
-		this.renderer?.updateWorldCoverage();
+		this.renderer?.updateSizers();
 
 		this.renderer?.renderBackgroundTiles();
 
@@ -331,7 +329,19 @@ export class Game {
 
 	exit() {
 		this.gameState = GameStatusEnum.Idle;
+		this.inputManager?.unRegisterCommand([CustomCommands.Boost, CustomCommands.TurnLeft, CustomCommands.TurnRight]);
 		this.socket.disconnect();
+
+		// Nullify references to prevent potential memory leaks
+		this.canvas = null;
+		this.renderer = null;
+		this.inputManager = null;
+		this.particleSystems = [];
+		this.musicManager = null;
+		this.socket = null;
+		this.playerSelf = null;
+		this.playerOthers = {};
+		this.foodMap = {};
 	}
 
 	private connectPlayerSelf(data) {
@@ -371,7 +381,8 @@ export class Game {
 			return newVec;
 		};
 
-		let ps = new ParticleSystem(this.canvas, this.playerSelf.positions[0], this.renderer, false, eatParticles);
+		let psPos = new Position(this.playerSelf.positions[0].x, this.playerSelf.positions[0].y);
+		let ps = new ParticleSystem(this.canvas, psPos, this.renderer, false, eatParticles);
 		this.playerSelf.particleSystem = ps;
 	}
 
@@ -412,7 +423,7 @@ export class Game {
 				`${i}`,
 				randomName,
 				Random.nextRandomBetween(4, 7),
-				new Position(Random.nextRandomBetween(0, 1), Random.nextRandomBetween(0, 1)),
+				{ x: Random.nextRandomBetween(0, 1), y: Random.nextRandomBetween(0, 1) },
 				FoodType.REGULAR
 			);
 		}

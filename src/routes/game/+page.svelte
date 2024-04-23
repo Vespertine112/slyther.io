@@ -3,17 +3,27 @@
 	import { Game, GameStatusEnum } from '$lib/client/game';
 	import { MusicManager } from '$lib/client/music';
 	import InputManager from '$lib/inputManager';
+	import { Random } from '$lib/shared/random';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { blur } from 'svelte/transition';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
 	$: show = false;
-	$: frameCounter = 0;
 	let canvas: HTMLCanvasElement;
 	let lastTimestamp = performance.now();
 	let highScores: { name: string; score: number }[] = [];
 	let playerName: string | null;
+
+	$: frameCounter = 0;
+	$: fps = 0;
+	$: frameTimer = 0;
+
+	$: if (frameTimer > 1000) {
+		fps = frameCounter;
+		frameCounter = 0;
+		frameTimer = 0;
+	}
 
 	// Grab the stored scores
 	if (browser) {
@@ -56,7 +66,8 @@
 
 			game.render();
 
-			frameCounter += 1;
+			frameCounter++;
+			frameTimer += elapsedTime;
 
 			game = game;
 
@@ -86,7 +97,7 @@
 			highScores.sort((a, b) => b.score - a.score);
 
 			localStorage.setItem('slyther.io.highScores', JSON.stringify(highScores));
-			game.playerScore = 0;
+			game.exit();
 		}
 	}
 </script>
@@ -105,7 +116,11 @@
 		</div>
 
 		<div class="lowerLeft displayText">
-			<p style="margin: 0;">Lag: {game.inputLatency}ms</p>
+			<p style="margin: 0;">Input Lag: {game.inputLatency}ms</p>
+		</div>
+
+		<div class="topLeft displayText">
+			<p style="margin: 0;">FPS: {fps}</p>
 		</div>
 
 		<div class="lowerRight displayText">
@@ -178,6 +193,18 @@
 		flex-direction: row;
 		left: 0.5rem;
 		bottom: 0.5rem;
+		background: rgb(00, 00, 00, 0.5);
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		z-index: 100;
+	}
+
+	.topLeft {
+		position: absolute;
+		display: flex;
+		flex-direction: row;
+		left: 0.5rem;
+		top: 0.5rem;
 		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
