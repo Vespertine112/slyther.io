@@ -104,7 +104,7 @@ export class GameServer {
 
 		// Add food to map (only if players are playing)
 		if (Object.entries(this.foodMap).length < this.maximumFood && Object.entries(this.activeClients).length > 0) {
-			// this.addRandomFoodToMap(1);
+			this.addRandomFoodToMap(1);
 		}
 
 		// Perform collision checks for all snakes
@@ -350,7 +350,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		// this.addRandomFoodToMap(this.maximumFood);
+		this.addRandomFoodToMap(this.maximumFood);
 	}
 
 	/*
