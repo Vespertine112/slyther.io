@@ -3,6 +3,7 @@ export enum NetworkIds {
 	INPUT_BOOST = 'boost',
 	INPUT_ROTATE_LEFT = 'rotate-left',
 	INPUT_ROTATE_RIGHT = 'rotate-right',
+	INPUT_MOUSE_TURN = 'mouse-turn',
 	CONNECT_ACK = 'connect-ack',
 	CONNECT_OTHER = 'connect-other',
 	DISCONNECT_OTHER = 'disconnect-other',

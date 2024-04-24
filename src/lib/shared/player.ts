@@ -63,6 +63,10 @@ export class Player {
 		this.directions[0] -= this.rotateRate * elapsedTime;
 	}
 
+	snapTurn(angle: number) {
+		this.directions[0] = angle;
+	}
+
 	// Player consumes 'foods' food units
 	eat(foodMap: { [foodId: string]: Food }) {
 		if (this.state != PlayerStates.ALIVE) return;

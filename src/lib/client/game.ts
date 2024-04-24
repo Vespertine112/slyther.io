@@ -323,6 +323,29 @@ export class Game {
 			this.messageHistory.enqueue(message);
 			this.playerSelf.boost(elapsedTime);
 		});
+		this.inputManager.registerCommand([CustomCommands.MouseMove], { fireOnce: false }, (elapsedTime) => {
+			let mouseX = this.inputManager.mousePosition.x;
+			let mouseY = this.inputManager.mousePosition.y;
+
+			let headCanvasPos = this.renderer?.translateGamePositionToCanvas(this.playerSelf.positions[0]);
+
+			let deltaX = mouseX - headCanvasPos.x;
+			let deltaY = mouseY - headCanvasPos.y;
+			let angle = Math.atan2(deltaY, deltaX);
+
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_MOUSE_TURN,
+				turnAngle: angle,
+				currentTime: performance.now()
+			};
+
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+
+			this.playerSelf?.snapTurn(angle);
+		});
 	}
 
 	exit() {

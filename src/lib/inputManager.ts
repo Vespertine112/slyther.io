@@ -4,7 +4,8 @@ export enum CustomCommands {
 	MoveForward = 'MoveForward',
 	Boost = 'Boost',
 	TurnLeft = 'TurnLeft',
-	TurnRight = 'TurnRight'
+	TurnRight = 'TurnRight',
+	MouseMove = 'MouseMove'
 }
 
 type handlerCallback = (t: any) => any;
@@ -20,7 +21,8 @@ export default class InputManager {
 		{ label: 'Move Forward', keyCode: 'ArrowUp', command: CustomCommands.MoveForward },
 		{ label: 'Boost', keyCode: ' ', command: CustomCommands.Boost },
 		{ label: 'Turn Right', keyCode: 'ArrowRight', command: CustomCommands.TurnRight },
-		{ label: 'Turn Left', keyCode: 'ArrowLeft', command: CustomCommands.TurnLeft }
+		{ label: 'Turn Left', keyCode: 'ArrowLeft', command: CustomCommands.TurnLeft },
+		{ label: 'Mouse', keyCode: 'MouseMove', command: CustomCommands.MouseMove }
 	];
 
 	activeKeys: { [keyEvent: string]: boolean } = {};
@@ -48,11 +50,6 @@ export default class InputManager {
 		for (let key in this.activeKeys) {
 			// Resolve custom commnds to their handlers
 			if (this.handlers.hasOwnProperty(key)) {
-				if (key == 'MouseUp') {
-					this.handlers[key].handler(elapsedTime);
-					continue;
-				}
-
 				// Fire imediately the first press
 				if (!this.handlers[key].options.hasFired) {
 					this.handlers[key].handler(elapsedTime);
@@ -78,9 +75,7 @@ export default class InputManager {
 			}
 		}
 
-		// MouseUp is a special case. As soon as it's fired once, it removes
-		// itself, there is nothing else to listen to.
-		delete this.activeKeys['MouseUp'];
+		delete this.activeKeys[CustomCommands.MouseMove];
 	}
 
 	keyPress(event: KeyboardEvent) {
@@ -111,10 +106,11 @@ export default class InputManager {
 
 	mouseMove(event: MouseEvent) {
 		this.mousePosition = { x: event.x, y: event.y };
+		this.activeKeys[CustomCommands.MouseMove] = true;
 	}
 
 	mouseUp(event: MouseEvent) {
-		this.activeKeys['MouseUp'] = true;
+		// this.activeKeys['MouseUp'] = true;
 	}
 
 	registerCommand(
