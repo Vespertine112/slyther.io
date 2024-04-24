@@ -13,9 +13,12 @@ export class MusicManager {
 	private sourceNodes: Map<string, AudioBufferSourceNode> = new Map<string, AudioBufferSourceNode>();
 	private playingMusic!: string;
 
+	private soundSetting = true;
+
 	private constructor() {
 		if (browser) {
 			this.audioContext = new AudioContext();
+			this.soundSetting = JSON.parse(localStorage.getItem('slyther.io.settings') ?? '').sound ?? true;
 		}
 	}
 
@@ -47,6 +50,8 @@ export class MusicManager {
 	}
 
 	playMusic(name: string, loop: boolean = false, volume: number = 1, fadeDuration: number = 0): void {
+		if (!this.soundSetting) return;
+
 		// Stop any currently playing music
 		this.stopMusic(5);
 
@@ -72,6 +77,8 @@ export class MusicManager {
 	}
 
 	playSound(name: string, loop: boolean = false, volume: number = 1): void {
+		if (!this.soundSetting) return;
+
 		const audioBuffer = this.audioBuffers.get(name);
 		if (audioBuffer) {
 			const sourceNode = this.audioContext.createBufferSource();

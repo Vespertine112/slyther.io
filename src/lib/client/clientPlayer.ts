@@ -35,18 +35,6 @@ export class ClientPlayer extends Player {
 		this.initalizeBodyEntities(bodyEntitySpec);
 	}
 
-	// Rotates a player's head right
-	rotateRight(elapsedTime: number) {
-		super.rotateRight(elapsedTime);
-		this.head.direction += this.rotateRate * elapsedTime;
-	}
-
-	// Rotates a player's head left
-	rotateLeft(elapsedTime: number) {
-		super.rotateLeft(elapsedTime);
-		this.head.direction -= this.rotateRate * elapsedTime;
-	}
-
 	/**
 	 * Client-side eat method. Mostly just plays the bite sound & throws particles
 	 */

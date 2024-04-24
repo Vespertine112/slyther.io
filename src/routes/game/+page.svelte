@@ -13,6 +13,7 @@
 	let canvas: HTMLCanvasElement;
 	let lastTimestamp = performance.now();
 	let highScores: { name: string; score: number }[] = [];
+	let zenMode = false;
 	let playerName: string | null;
 
 	$: frameCounter = 0;
@@ -25,12 +26,13 @@
 		frameTimer = 0;
 	}
 
-	// Grab the stored scores
+	// Grab the stored scores & settings
 	if (browser) {
 		const storedHighScores: any = localStorage.getItem('slyther.io.highScores');
 		if (storedHighScores) {
 			highScores = JSON.parse(storedHighScores);
 		}
+		zenMode = JSON.parse(localStorage.getItem('slyther.io.settings') ?? '').zenMode ?? false;
 	}
 
 	// Grab stored playername
@@ -84,6 +86,10 @@
 		musicManager.loadMusic('backgroundMusic', 'assets/sounds/backgroundMusic.mp3').then((res) => {
 			musicManager.playMusic('backgroundMusic', true, 0.5, 5);
 		});
+
+		if (zenMode) {
+			canvas.requestFullscreen();
+		}
 
 		game.initalizeGame(canvas, inputManager, playerName);
 		gameLoop(performance.now());
@@ -145,6 +151,9 @@
 				<div class="losepane">
 					<h1>You Zigged, but shoulda Zagged!</h1>
 					<hr style="width: 100%;" />
+					<div>
+						<h3 style="margin: 0.5em 0 0.5em 0;">{playerName}</h3>
+					</div>
 					<div style="display: flex; flex-direction: row; width: 100%; justify-content: center;">
 						<h3 style="margin-right: 1rem;">Score: {game.playerScore}</h3>
 						<h3 style="margin-left: 1rem;">Highest Rank: {game.playerBestRank}</h3>

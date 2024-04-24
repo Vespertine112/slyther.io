@@ -8,25 +8,44 @@
 	import { browser } from '$app/environment';
 	import { Game } from '$lib/client/game';
 	import InputManager from '$lib/inputManager';
+	import Checkbox from 'svelte-checkbox';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
 	$: show = false;
 	$: state = MenuStates.MainMenu;
 	let name = '';
-	let canvas: HTMLCanvasElement;
+	let zenModeSetting = false;
+	let soundSetting = true;
 	let highScores: { name: string; score: number }[] = [];
+	let canvas: HTMLCanvasElement;
 	let inputManager = new InputManager();
 
-	// Grab the stored scores & name
+	// Grab the stored scores, name, and settings
 	if (browser) {
 		const storedHighScores: any = localStorage.getItem('slyther.io.highScores');
+		let storedSettings: any = localStorage.getItem('slyther.io.settings');
 		name = localStorage.getItem('slyther.io.playerName') || '';
 		if (storedHighScores) {
 			highScores = JSON.parse(storedHighScores);
 		}
+		// If we don't have saved settings, load defaults
+		if (storedSettings) {
+			storedSettings = JSON.parse(storedSettings);
+			zenModeSetting = storedSettings.zenMode;
+			soundSetting = storedSettings.sound;
+		} else {
+			localStorage.setItem(
+				'slyther.io.settings',
+				JSON.stringify({
+					sound: true,
+					zenMode: false
+				})
+			);
+		}
 	}
 
+	// States for font-page menuing. Quick & somewhat dirty
 	enum MenuStates {
 		MainMenu,
 		EnterName,
@@ -80,6 +99,17 @@
 
 	function setPlayerName() {
 		localStorage.setItem('slyther.io.playerName', name);
+	}
+
+	function saveSettings() {
+		MusicManager.getInstance().playSound('clickSound', false, 0.75);
+		localStorage.setItem(
+			'slyther.io.settings',
+			JSON.stringify({
+				sound: soundSetting,
+				zenMode: zenModeSetting
+			})
+		);
 	}
 
 	function buttonClick(newState: MenuStates) {
@@ -155,7 +185,7 @@
 							{#each inputManager.gameCommands as command}
 								<tr>
 									<td>{command.label}</td>
-									<td> {command.keyCode} </td>
+									<td class="control"> {command.keyCode} </td>
 								</tr>
 							{/each}
 						</table>
@@ -199,16 +229,41 @@
 		{#if state == MenuStates.Settings}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
 				<div class="menu shadow">
-					<div class="scores">
-						<h3>Full-Screen</h3>
-						<p>*Full-Screen Zen-Mode (no HUD)*</p>
-						<h3>Sound?</h3>
+					<div class="customControls">
+						<table class="textShadow">
+							<tr>
+								<td> Zen-Mode </td>
+								<td>
+									<Checkbox
+										bind:checked={zenModeSetting}
+										size="2rem"
+										primaryColor="var(--c4)"
+										secondaryColor="var(--c1)"
+									/>
+								</td>
+							</tr>
+
+							<p style="font-size: small;"><i>*Full-Screen (no HUD)*</i></p>
+							<tr>
+								<td> Sound </td>
+								<td>
+									<Checkbox
+										bind:checked={soundSetting}
+										size="2rem"
+										primaryColor="var(--c4)"
+										secondaryColor="var(--c1)"
+									/>
+								</td>
+							</tr>
+						</table>
 					</div>
 
 					<div class="controlButtons">
 						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
 							Back
 						</button>
+
+						<button class="menuButton shadow" on:click={saveSettings}> Save </button>
 					</div>
 				</div>
 			</div>
@@ -371,6 +426,21 @@
 		font-size: 1.5rem;
 	}
 
+	.control {
+		color: var(--c4);
+		cursor: pointer;
+		transition-duration: 0.35s;
+		text-shadow: 12px 8px 7px rgba(0, 0, 0, 0.8);
+	}
+
+	.control:hover {
+		text-decoration: underline;
+		text-underline-offset: 8px;
+		text-shadow: 16px 12px 7px rgba(0, 0, 0, 0.8);
+		opacity: 1;
+		text-decoration-thickness: 4px;
+	}
+
 	.scores {
 		display: flex;
 		flex-direction: column;
@@ -383,5 +453,8 @@
 	}
 	.scores > h3 {
 		margin: 0.5rem 0 0.5rem 0;
+	}
+
+	.settingCheckbox {
 	}
 </style>

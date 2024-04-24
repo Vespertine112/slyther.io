@@ -101,8 +101,8 @@ export class GameServer {
 	update(elapsedTime: number, currentTime: number) {
 		// Perform Client update actions
 		for (let clientId in this.activeClients) {
-			this.activeClients[clientId].player.update(elapsedTime);
 			this.activeClients[clientId].player.eat(this.foodMap);
+			this.activeClients[clientId].player.update(elapsedTime);
 		}
 
 		// Add food to map (only if players are playing)

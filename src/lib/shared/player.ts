@@ -101,7 +101,7 @@ export class Player {
 
 				// Enable this if you want each body part to rotate
 				// this.directions.push(newDir);
-				this.directions.push(0);
+				this.directions.push(this.directions[1]);
 			}
 		}
 
@@ -123,7 +123,6 @@ export class Player {
 
 		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
-			if (isNaN(this.positions[i].x)) alert('jkl');
 			let deltaX = this.positions[i].prev!.x - this.positions[i].x;
 			let deltaY = this.positions[i].prev!.y - this.positions[i].y;
 			let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -142,10 +141,7 @@ export class Player {
 
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
-			if (i == this.positions.length - 1) {
-				// If you want each body part to rotate, pull this out of condition
-				this.directions[i] = Math.atan2(deltaY, deltaX);
-			}
+			this.directions[i] = Math.atan2(deltaY, deltaX);
 
 			// Check if the body part has reached its target position
 			if (distance <= this.speed * elapsedTime * (multiplier ?? 1) || ratio == 0) {
