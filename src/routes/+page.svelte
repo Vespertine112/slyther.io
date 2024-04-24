@@ -7,19 +7,23 @@
 	import { MusicManager } from '$lib/client/music';
 	import { browser } from '$app/environment';
 	import { Game } from '$lib/client/game';
-	import InputManager from '$lib/inputManager';
+	import InputManager, { CustomCommands } from '$lib/inputManager';
 	import Checkbox from 'svelte-checkbox';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
 	$: show = false;
 	$: state = MenuStates.MainMenu;
+
 	let name = '';
 	let zenModeSetting = false;
 	let soundSetting = true;
 	let highScores: { name: string; score: number }[] = [];
 	let canvas: HTMLCanvasElement;
 	let inputManager = new InputManager();
+
+	const keyPressHandler = inputManager.keyPress.bind(inputManager);
+	const keyReleaseHandler = inputManager.keyRelease.bind(inputManager);
 
 	// Grab the stored scores, name, and settings
 	if (browser) {
@@ -116,8 +120,20 @@
 		MusicManager.getInstance().playSound('clickSound', false, 0.75);
 		state = newState;
 	}
+
+	function mapCustomControl(command: CustomCommands) {
+		MusicManager.getInstance().playSound('clickSound', false, 0.75);
+		inputManager.listenForCustomCommandMap(command, () => {
+			inputManager = inputManager;
+		});
+	}
+	function saveControls() {
+		MusicManager.getInstance().playSound('clickSound', false, 0.75);
+		inputManager.saveCustomCommands();
+	}
 </script>
 
+<svelte:window on:keydown={keyPressHandler} on:keyup={keyReleaseHandler} />
 {#if show}
 	<div class="container" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
 		<div in:fly={{ x: -200, duration: 1000 }} class="topbar shadow">
@@ -182,13 +198,21 @@
 								<th>Input</th>
 							</tr>
 
-							{#each inputManager.gameCommands as command}
-								<tr>
-									<td>{command.label}</td>
-									<td class="control"> {command.keyCode} </td>
-								</tr>
-							{/each}
+							{#key inputManager}
+								{#each inputManager.gameCommands as command}
+									<tr>
+										<td>{command.label}</td>
+										<td class="control" on:click={() => mapCustomControl(command.command)}>
+											{command.keyCode}
+										</td>
+									</tr>
+								{/each}
+							{/key}
 						</table>
+					</div>
+
+					<div style="display: flex; flex-direction: column; align-items: center;">
+						<p style="font-size: small;"><i>*Click a control to re-bind*</i></p>
 					</div>
 
 					<div class="controlButtons">
@@ -196,9 +220,7 @@
 							Back
 						</button>
 
-						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
-							Save
-						</button>
+						<button class="menuButton shadow" on:click={saveControls}> Save </button>
 					</div>
 				</div>
 			</div>

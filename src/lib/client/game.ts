@@ -290,7 +290,7 @@ export class Game {
 	}
 
 	registerKeyboardHandlers() {
-		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: false }, (elapsedTime) => {
+		this.inputManager.registerCommand([CustomCommands.RotateRight], { fireOnce: false }, (elapsedTime) => {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
@@ -301,7 +301,8 @@ export class Game {
 			this.messageHistory.enqueue(message);
 			this.playerSelf.rotateRight(elapsedTime);
 		});
-		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: false }, (elapsedTime) => {
+
+		this.inputManager.registerCommand([CustomCommands.RotateLeft], { fireOnce: false }, (elapsedTime) => {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
@@ -312,6 +313,59 @@ export class Game {
 			this.messageHistory.enqueue(message);
 			this.playerSelf.rotateLeft(elapsedTime);
 		});
+
+		this.inputManager.registerCommand([CustomCommands.TurnUp], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: -Math.PI / 2, // Snap angle for turning up
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(-Math.PI / 2);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.TurnDown], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: Math.PI / 2, // Snap angle for turning down
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(Math.PI / 2);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: 0, // Snap angle for turning right
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(0);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: Math.PI, // Snap angle for turning left
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(Math.PI);
+		});
+
 		this.inputManager.registerCommand([CustomCommands.Boost], { fireOnce: false }, (elapsedTime) => {
 			let message = {
 				id: this.messageId++,
@@ -323,6 +377,7 @@ export class Game {
 			this.messageHistory.enqueue(message);
 			this.playerSelf.boost(elapsedTime);
 		});
+
 		this.inputManager.registerCommand([CustomCommands.MouseMove], { fireOnce: false }, (elapsedTime) => {
 			let mouseX = this.inputManager.mousePosition.x;
 			let mouseY = this.inputManager.mousePosition.y;
@@ -337,7 +392,7 @@ export class Game {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
-				type: NetworkIds.INPUT_MOUSE_TURN,
+				type: NetworkIds.INPUT_SNAP_TURN,
 				turnAngle: angle,
 				currentTime: performance.now()
 			};
@@ -351,7 +406,9 @@ export class Game {
 
 	exit() {
 		this.gameState = GameStatusEnum.Idle;
-		this.inputManager?.unRegisterCommand([CustomCommands.Boost, CustomCommands.TurnLeft, CustomCommands.TurnRight]);
+		this.inputManager?.getMappedCustomCommands().forEach((command) => {
+			this.inputManager?.unRegisterCommand([command.command]);
+		});
 		this.socket.disconnect();
 
 		// Nullify references to prevent potential memory leaks

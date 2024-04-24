@@ -91,7 +91,7 @@ export class GameServer {
 				case NetworkIds.INPUT_ROTATE_RIGHT:
 					client.player.rotateRight(input.message.elapsedTime);
 					break;
-				case NetworkIds.INPUT_MOUSE_TURN:
+				case NetworkIds.INPUT_SNAP_TURN:
 					client.player.snapTurn(input.message.turnAngle);
 					break;
 			}

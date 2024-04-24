@@ -1,6 +1,4 @@
-import { Random } from '../shared/random';
 import { Food, Position } from '../shared/gameTypes';
-import { Queue } from '../shared/queue';
 
 export enum PlayerStates {
 	ALIVE,
@@ -29,6 +27,7 @@ export class Player {
 	state: PlayerStates = PlayerStates.ALIVE;
 
 	protected readonly bodyOffset: number = 0.007; // Offset for body parts
+	private targetSnapAngle: number | null = null;
 
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
@@ -40,6 +39,7 @@ export class Player {
 		if (this.state != PlayerStates.ALIVE) return;
 
 		this.reportUpdate = true;
+		this.updateSnapTurnAngle(elapsedTime);
 		this.moveSnakeForward(elapsedTime, 2);
 	}
 
@@ -68,7 +68,7 @@ export class Player {
 
 		this.reportUpdate = true;
 
-		this.directions[0] = angle;
+		this.targetSnapAngle = angle;
 	}
 
 	// Player consumes 'foods' food units
@@ -100,8 +100,7 @@ export class Player {
 				this.positions.push(newPos);
 
 				// Enable this if you want each body part to rotate
-				// this.directions.push(newDir);
-				this.directions.push(this.directions[1]);
+				this.directions.push(newDir);
 			}
 		}
 
@@ -115,6 +114,7 @@ export class Player {
 
 	// Continue movement based on current time
 	update(elapsedTime: number) {
+		this.updateSnapTurnAngle(elapsedTime);
 		this.moveSnakeForward(elapsedTime);
 	}
 
@@ -164,5 +164,34 @@ export class Player {
 
 		// Check if the distance is less than or equal to the radius of the player's head
 		return distance <= this.size;
+	}
+
+	// Calculate the shortest angular distance between two angles
+	private shortestAngularDistance(a: number, b: number): number {
+		const pi2 = Math.PI * 2;
+		let diff = ((b - a + Math.PI) % pi2) - Math.PI;
+		if (diff < -Math.PI) diff += pi2;
+		return diff;
+	}
+
+	/**
+	 * If a snap turn is still processing, update direction towards it
+	 */
+	private updateSnapTurnAngle(elapsedTime: number) {
+		if (this.targetSnapAngle !== null && this.directions[0] !== this.targetSnapAngle) {
+			let angleDiff = this.shortestAngularDistance(this.directions[0], this.targetSnapAngle);
+			let rotationDirection = Math.sign(angleDiff);
+
+			let newDirection = this.directions[0] + rotationDirection * this.rotateRate * elapsedTime;
+
+			if (Math.abs(angleDiff) < Math.abs(rotationDirection * this.rotateRate * elapsedTime)) {
+				this.directions[0] = this.targetSnapAngle;
+				this.targetSnapAngle = null;
+			} else {
+				this.directions[0] = newDirection;
+			}
+
+			this.reportUpdate = true;
+		}
 	}
 }

@@ -3,8 +3,12 @@ import { browser } from '$app/environment';
 export enum CustomCommands {
 	MoveForward = 'MoveForward',
 	Boost = 'Boost',
-	TurnLeft = 'TurnLeft',
+	RotateRight = 'RotateLeft',
+	RotateLeft = 'RotateRight',
+	TurnUp = 'TurnUp',
+	TurnDown = 'TurnDown',
 	TurnRight = 'TurnRight',
+	TurnLeft = 'TurnLeft',
 	MouseMove = 'MouseMove'
 }
 
@@ -19,10 +23,15 @@ export default class InputManager {
 	private activelyMappingCommandEnum!: CustomCommands;
 	private customGameCommands: { label: string; keyCode: string; command: CustomCommands }[] = [
 		{ label: 'Boost', keyCode: 'Space Bar', command: CustomCommands.Boost },
-		{ label: 'Turn Right', keyCode: 'ArrowRight', command: CustomCommands.TurnRight },
-		{ label: 'Turn Left', keyCode: 'ArrowLeft', command: CustomCommands.TurnLeft },
-		{ label: 'Mouse', keyCode: 'Mouse Move', command: CustomCommands.MouseMove }
+		{ label: 'Rotate Right', keyCode: 'ArrowRight', command: CustomCommands.RotateRight },
+		{ label: 'Rotate Left', keyCode: 'ArrowLeft', command: CustomCommands.RotateLeft },
+		{ label: 'Mouse', keyCode: 'Mouse Move', command: CustomCommands.MouseMove },
+		{ label: 'Turn Up', keyCode: 'w', command: CustomCommands.TurnUp },
+		{ label: 'Turn Down', keyCode: 's', command: CustomCommands.TurnDown },
+		{ label: 'Turn Right', keyCode: 'd', command: CustomCommands.TurnRight },
+		{ label: 'Turn Left', keyCode: 'a', command: CustomCommands.TurnLeft }
 	];
+	private customMappingCallback: undefined | (() => void);
 
 	activeKeys: { [keyEvent: string]: boolean } = {};
 	handlers: {
@@ -81,6 +90,10 @@ export default class InputManager {
 		if (this.activelyMappingCommandFlag) {
 			this.mapCustomCommand(event.key, this.activelyMappingCommandEnum);
 			this.activelyMappingCommandFlag = false;
+
+			if (this.customMappingCallback) {
+				this.customMappingCallback();
+			}
 		}
 
 		this.activeKeys[this.resolveKey(event.key)] = true;
@@ -109,7 +122,7 @@ export default class InputManager {
 	}
 
 	mouseUp(event: MouseEvent) {
-		// this.activeKeys['MouseUp'] = true;
+		this.activeKeys['MouseUp'] = true;
 	}
 
 	registerCommand(
@@ -145,17 +158,16 @@ export default class InputManager {
 		return this.customGameCommands;
 	}
 
-	listenForCustomCommandMap(newCommand: CustomCommands) {
+	listenForCustomCommandMap(newCommand: CustomCommands, callback: () => void) {
 		this.activelyMappingCommandFlag = true;
 		this.activelyMappingCommandEnum = newCommand;
+		this.customMappingCallback = callback;
 	}
 
 	private mapCustomCommand(keyCode: string, newCommand: CustomCommands) {
 		this.customGameCommands.map((custCommand) => {
 			if (custCommand.command === newCommand) {
 				custCommand.keyCode = keyCode;
-
-				this.saveCustomCommands();
 			}
 		});
 	}
@@ -189,7 +201,7 @@ export default class InputManager {
 	}
 
 	// Savecustom commands to localStorage
-	private saveCustomCommands() {
+	saveCustomCommands() {
 		if (!browser) return;
 		localStorage.setItem('slyther.io.customCommands', JSON.stringify(this.customGameCommands));
 	}
