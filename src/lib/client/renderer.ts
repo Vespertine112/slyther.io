@@ -101,7 +101,7 @@ export class Renderer {
 		// Handles the drop-shadow on the canvas
 		let adjustedPlayerSize = this.convertWorldLengthToPixels(player.size);
 
-		let currentEntity: Entity | undefined = player.tail;
+		let currentEntity: Entity = player.tail;
 		for (let idx = player.positions.length - 1; idx >= 0; idx--) {
 			if (idx == 0) currentEntity = player.head;
 			if (idx > 0 && idx < player.positions.length - 1) currentEntity = player.body;

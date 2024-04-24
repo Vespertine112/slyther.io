@@ -28,7 +28,7 @@ export class Player {
 	 */
 	state: PlayerStates = PlayerStates.ALIVE;
 
-	private readonly bodyOffset: number = 0.01; // Offset for body parts
+	protected readonly bodyOffset: number = 0.01; // Offset for body parts
 
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
@@ -112,19 +112,29 @@ export class Player {
 
 		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
-			const deltaX = this.positions[i].prev!.x - this.positions[i].x;
-			const deltaY = this.positions[i].prev!.y - this.positions[i].y;
+			if (isNaN(this.positions[i].x)) alert('jkl');
+			let deltaX = this.positions[i].prev!.x - this.positions[i].x;
+			let deltaY = this.positions[i].prev!.y - this.positions[i].y;
+			let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-			const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			let ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
 
-			const ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+			// HACK: This is a bad solution to the floating point issue w/ js on browser :(
+			if (ratio == Infinity) {
+				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
+
+				deltaX = this.positions[i].prev!.x - this.positions[i].x;
+				deltaY = this.positions[i].prev!.y - this.positions[i].y;
+				distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+			}
 
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
 			this.directions[i] = Math.atan2(deltaY, deltaX);
 
 			// Check if the body part has reached its target position
-			if (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
+			if (distance <= this.speed * elapsedTime * (multiplier ?? 1) || ratio == 0) {
 				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			}
 		}

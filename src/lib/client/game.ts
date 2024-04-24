@@ -101,7 +101,6 @@ export class Game {
 					} else {
 						this.playerOthers[message.data.clientId].name = message.data.name;
 					}
-
 					break;
 				case NetworkIds.PLAYER_SELF_ATE:
 					this.playerSelf.eat();
@@ -116,59 +115,6 @@ export class Game {
 					this.otherPlayerDied(message.data);
 					break;
 			}
-		}
-	}
-
-	/**
-	 * Hook for player self dying
-	 */
-	private playerDiedSelf(data) {
-		this.playerSelf.state = PlayerStates.DEAD;
-
-		let playerHeadPos = this.playerSelf.positions[0];
-		let headExplosionPS = new ParticleSystem(
-			this.canvas,
-			new Position(playerHeadPos.x, playerHeadPos.y),
-			this.renderer,
-			true
-		);
-		headExplosionPS.turnOffAfter(125);
-		this.particleSystems.push(headExplosionPS);
-
-		this.musicManager?.playSound('playerDeathSound', false);
-
-		this.gameState = GameStatusEnum.Lost;
-	}
-
-	/**
-	 * Hook for another player dying
-	 * Removes other player, plays death sound, and places particle systems
-	 */
-	private otherPlayerDied(data: any) {
-		let playerHeadPos = this.playerOthers[data.clientId].positions[0];
-		let headExplosionPS = new ParticleSystem(
-			this.canvas,
-			new Position(playerHeadPos.x, playerHeadPos.y),
-			this.renderer,
-			true
-		);
-		headExplosionPS.turnOffAfter(125);
-		this.particleSystems.push(headExplosionPS);
-
-		this.musicManager?.playMusic('playerDeathSound', false);
-
-		delete this.playerOthers[data.clientId];
-	}
-
-	private updateFoodMap(data) {
-		for (let i = 0; i < data.eaten.length; i++) {
-			const foodId = data.eaten[i];
-			delete this.foodMap[foodId];
-		}
-
-		for (let i = 0; i < data.new.length; i++) {
-			const food = data.new[i];
-			this.foodMap[food.name] = food;
 		}
 	}
 
@@ -212,6 +158,58 @@ export class Game {
 
 		if (this.playerSelf && this.playerSelf.state == PlayerStates.ALIVE) {
 			this.renderer.renderPlayer(this.playerSelf);
+		}
+	}
+
+	/**
+	 * Hook for player self dying
+	 */
+	private playerDiedSelf(data) {
+		this.playerSelf.state = PlayerStates.DEAD;
+
+		let playerHeadPos = this.playerSelf.positions[0];
+		let headExplosionPS = new ParticleSystem(
+			this.canvas,
+			new Position(playerHeadPos.x, playerHeadPos.y),
+			this.renderer,
+			true
+		);
+		headExplosionPS.turnOffAfter(125);
+		this.particleSystems.push(headExplosionPS);
+
+		this.musicManager?.playSound('playerDeathSound', false);
+
+		this.gameState = GameStatusEnum.Lost;
+	}
+	/**
+	 * Hook for another player dying
+	 * Removes other player, plays death sound, and places particle systems
+	 */
+	private otherPlayerDied(data: any) {
+		let playerHeadPos = this.playerOthers[data.clientId].positions[0];
+		let headExplosionPS = new ParticleSystem(
+			this.canvas,
+			new Position(playerHeadPos.x, playerHeadPos.y),
+			this.renderer,
+			true
+		);
+		headExplosionPS.turnOffAfter(125);
+		this.particleSystems.push(headExplosionPS);
+
+		this.musicManager?.playMusic('playerDeathSound', false);
+
+		delete this.playerOthers[data.clientId];
+	}
+
+	private updateFoodMap(data) {
+		for (let i = 0; i < data.eaten.length; i++) {
+			const foodId = data.eaten[i];
+			delete this.foodMap[foodId];
+		}
+
+		for (let i = 0; i < data.new.length; i++) {
+			const food = data.new[i];
+			this.foodMap[food.name] = food;
 		}
 	}
 

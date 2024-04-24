@@ -1,6 +1,4 @@
-import { Random } from '../shared/random';
-import { Food, Position } from '../shared/gameTypes';
-import { Queue } from '../shared/queue';
+import { Position } from '../shared/gameTypes';
 import { Player } from '../shared/player';
 
 export class ServerPlayer extends Player {
@@ -9,7 +7,7 @@ export class ServerPlayer extends Player {
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
-		this.length = 20;
+		this.length = 5;
 		this.speed = 1 / 12500;
 		this.size = 1 / 100;
 		this.directions.push(this.calculateDirectionTowardsMiddle()); // Set direction towards the middle
@@ -38,9 +36,8 @@ export class ServerPlayer extends Player {
 
 	private createBodyParts() {
 		// Calculate offset for body and tail based on direction
-		const offset = 0.01;
-		const offsetX = Math.cos(this.directions[0]) * offset;
-		const offsetY = Math.sin(this.directions[0]) * offset;
+		const offsetX = Math.cos(this.directions[0]) * this.bodyOffset;
+		const offsetY = Math.sin(this.directions[0]) * this.bodyOffset;
 
 		// Create positions for head, body, and tail
 		let x = this.positions[0].x;

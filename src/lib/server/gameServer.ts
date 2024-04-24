@@ -18,7 +18,6 @@ interface Client {
  */
 export class GameServer {
 	private quit: boolean = false;
-	private lastUpdate: number = 0;
 	private activeClients: { [clientId: string]: Client } = {};
 	private inputQueue: Queue<any> = new Queue<any>();
 
@@ -105,7 +104,7 @@ export class GameServer {
 
 		// Add food to map (only if players are playing)
 		if (Object.entries(this.foodMap).length < this.maximumFood && Object.entries(this.activeClients).length > 0) {
-			this.addRandomFoodToMap(1);
+			// this.addRandomFoodToMap(1);
 		}
 
 		// Perform collision checks for all snakes
@@ -169,7 +168,9 @@ export class GameServer {
 				foodsEaten = foodsEaten.concat(player.eatenFoods);
 			}
 
-			newLeaderboard.push({ clientId: player.clientId, name: player.name, length: player.length });
+			if (player.state == PlayerStates.ALIVE) {
+				newLeaderboard.push({ clientId: player.clientId, name: player.name, length: player.length });
+			}
 		}
 
 		newLeaderboard.sort((a, b) => {
@@ -192,7 +193,11 @@ export class GameServer {
 			if (client.player.eatenFoods.length > 0) {
 				client.socket.emit(NetworkIds.PLAYER_SELF_ATE);
 			}
-			client.socket.emit(NetworkIds.UPDATE_FOODMAP, { new: this.foodsAdded, eaten: foodsEaten });
+
+			// UPDATE FOOD MAP
+			if (foodsEaten.length > 0 || this.foodsAdded.length > 0) {
+				client.socket.emit(NetworkIds.UPDATE_FOODMAP, { new: this.foodsAdded, eaten: foodsEaten });
+			}
 
 			// UPDATE PLAYER DEATH STATUS
 			if (client.player.state == PlayerStates.DEAD && !client.player.reportedAsDead) {
@@ -207,8 +212,10 @@ export class GameServer {
 			}
 
 			// UPDATE LEADERBOARDS
-			let rank = this.leaderBoard.findIndex((v) => v.clientId == client.player.clientId);
-			client.socket.emit(NetworkIds.UPDATE_LEADERBOARD, { rank: rank, top5: this.leaderBoard.slice(0, 5) });
+			if (leaderboardChanged) {
+				let rank = this.leaderBoard.findIndex((v) => v.clientId == client.player.clientId);
+				client.socket.emit(NetworkIds.UPDATE_LEADERBOARD, { rank: rank, top5: this.leaderBoard.slice(0, 5) });
+			}
 
 			// UPDATE PLAYER MOVEMENTS
 			let update = {
@@ -224,9 +231,6 @@ export class GameServer {
 			if (client.player.reportUpdate) {
 				client.socket.emit(NetworkIds.UPDATE_SELF, update);
 
-				//
-				// Notify all other connected clients about every
-				// other connected client status...but only if they are updated.
 				for (let otherId in this.activeClients) {
 					if (otherId !== clientId) {
 						this.activeClients[otherId].socket.emit(NetworkIds.UPDATE_OTHER, update);
@@ -346,7 +350,7 @@ export class GameServer {
 	}
 
 	private initalizeFoodMap() {
-		this.addRandomFoodToMap(this.maximumFood);
+		// this.addRandomFoodToMap(this.maximumFood);
 	}
 
 	/*
