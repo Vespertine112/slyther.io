@@ -328,6 +328,7 @@ export class Game {
 			let mouseY = this.inputManager.mousePosition.y;
 
 			let headCanvasPos = this.renderer?.translateGamePositionToCanvas(this.playerSelf.positions[0]);
+			if (!headCanvasPos) return;
 
 			let deltaX = mouseX - headCanvasPos.x;
 			let deltaY = mouseY - headCanvasPos.y;

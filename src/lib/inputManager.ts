@@ -18,11 +18,10 @@ export default class InputManager {
 	private activelyMappingCommandFlag = false;
 	private activelyMappingCommandEnum!: CustomCommands;
 	private customGameCommands: { label: string; keyCode: string; command: CustomCommands }[] = [
-		{ label: 'Move Forward', keyCode: 'ArrowUp', command: CustomCommands.MoveForward },
-		{ label: 'Boost', keyCode: ' ', command: CustomCommands.Boost },
+		{ label: 'Boost', keyCode: 'Space Bar', command: CustomCommands.Boost },
 		{ label: 'Turn Right', keyCode: 'ArrowRight', command: CustomCommands.TurnRight },
 		{ label: 'Turn Left', keyCode: 'ArrowLeft', command: CustomCommands.TurnLeft },
-		{ label: 'Mouse', keyCode: 'MouseMove', command: CustomCommands.MouseMove }
+		{ label: 'Mouse', keyCode: 'Mouse Move', command: CustomCommands.MouseMove }
 	];
 
 	activeKeys: { [keyEvent: string]: boolean } = {};
@@ -165,19 +164,25 @@ export default class InputManager {
 	 * Matches keys against custom codes or no-op
 	 */
 	private resolveKey(keyCode: string): string {
+		if (keyCode == ' ') {
+			let i = this.customGameCommands.findIndex((a) => a.command == CustomCommands.Boost);
+			return this.customGameCommands[i].command;
+		}
+
 		for (let idx = 0; idx < this.customGameCommands.length; idx++) {
 			const command = this.customGameCommands[idx];
 			if (command.keyCode == keyCode) {
 				return command.command;
 			}
 		}
+
 		return keyCode;
 	}
 
 	// Load up custom commands from localStorage
 	private loadCustomCommands() {
 		if (!browser) return;
-		const savedCommands = localStorage.getItem('slyther.customCommands');
+		const savedCommands = localStorage.getItem('slyther.io.customCommands');
 		if (savedCommands) {
 			this.customGameCommands = JSON.parse(savedCommands);
 		}
@@ -186,6 +191,10 @@ export default class InputManager {
 	// Savecustom commands to localStorage
 	private saveCustomCommands() {
 		if (!browser) return;
-		localStorage.setItem('slyther.customCommands', JSON.stringify(this.customGameCommands));
+		localStorage.setItem('slyther.io.customCommands', JSON.stringify(this.customGameCommands));
+	}
+
+	get gameCommands() {
+		return this.customGameCommands;
 	}
 }

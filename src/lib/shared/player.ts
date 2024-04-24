@@ -64,6 +64,10 @@ export class Player {
 	}
 
 	snapTurn(angle: number) {
+		if (this.state != PlayerStates.ALIVE) return;
+
+		this.reportUpdate = true;
+
 		this.directions[0] = angle;
 	}
 
@@ -80,7 +84,7 @@ export class Player {
 
 				this.reportUpdate = true;
 				this.length += Math.floor(food.size);
-				if (this.size < 1 / 30) this.size += 1 / 50000;
+				if (this.size < 1 / 40) this.size += 1 / 100000;
 
 				// Calculate offset for new body part
 				const offsetX = Math.cos(this.directions[this.positions.length - 1]) * this.bodyOffset;
@@ -94,7 +98,10 @@ export class Player {
 				const newDir = Math.atan2(newPos.y - lastPos.y, newPos.x - lastPos.x);
 
 				this.positions.push(newPos);
-				this.directions.push(newDir);
+
+				// Enable this if you want each body part to rotate
+				// this.directions.push(newDir);
+				this.directions.push(0);
 			}
 		}
 
@@ -136,6 +143,7 @@ export class Player {
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
 			if (i == this.positions.length - 1) {
+				// If you want each body part to rotate, pull this out of condition
 				this.directions[i] = Math.atan2(deltaY, deltaX);
 			}
 

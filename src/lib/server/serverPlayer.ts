@@ -9,7 +9,7 @@ export class ServerPlayer extends Player {
 		super(clientId, pos);
 		this.length = 6;
 		this.speed = 1 / 12500;
-		this.size = 1 / 100;
+		this.size = 1 / 120;
 		this.directions.push(this.calculateDirectionTowardsMiddle()); // Set direction towards the middle
 		/** Players start invincible for (n)ms **/
 		this.invincibilityTimer = 5000;

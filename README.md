@@ -20,4 +20,5 @@
 -   Dynamic Leaderboard & ranking tracking
 -   Customizeable Controls
 -   Particle systems on death & eating
+-   Entity Culling
 -   And much more!

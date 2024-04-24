@@ -34,7 +34,7 @@ export class Renderer {
 		public canvas: HTMLCanvasElement,
 		public playerSelf: ClientPlayer
 	) {
-		this.ctx = canvas.getContext('2d')!;
+		this.ctx = canvas.getContext('2d', { alpha: false })!;
 		this.updateSizers();
 		this.initBackgroundTileEntities();
 		this.initFoodEntities();

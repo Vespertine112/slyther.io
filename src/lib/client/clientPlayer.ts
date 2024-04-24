@@ -51,7 +51,7 @@ export class ClientPlayer extends Player {
 	 * Client-side eat method. Mostly just plays the bite sound & throws particles
 	 */
 	eat() {
-		this.musicManager.playSound('biteSound', false);
+		this.musicManager.playSound('biteSound', false, 0.3);
 
 		this.particleSystem.turnOn();
 		this.particleSystem.turnOffAfter(20);
@@ -80,7 +80,7 @@ export class ClientPlayer extends Player {
 					animate: false,
 					animStartX: 0,
 					animStartY: 0,
-					animCropH: 32,
+					animCropH: 34,
 					animCropW: 32,
 					sheetCols: 1,
 					sheetRows: 1

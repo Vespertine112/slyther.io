@@ -7,6 +7,7 @@
 	import { MusicManager } from '$lib/client/music';
 	import { browser } from '$app/environment';
 	import { Game } from '$lib/client/game';
+	import InputManager from '$lib/inputManager';
 
 	$: canvasWidth = 100;
 	$: canvasHeight = 100;
@@ -15,6 +16,7 @@
 	let name = '';
 	let canvas: HTMLCanvasElement;
 	let highScores: { name: string; score: number }[] = [];
+	let inputManager = new InputManager();
 
 	// Grab the stored scores & name
 	if (browser) {
@@ -30,7 +32,8 @@
 		EnterName,
 		Credits,
 		Settings,
-		HighScores
+		HighScores,
+		Controls
 	}
 
 	let game = new Game();
@@ -103,8 +106,7 @@
 						>High Scores</button
 					>
 
-					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.HighScores)}
-						>Controls</button
+					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.Controls)}>Controls</button
 					>
 
 					<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.Settings)}>Settings</button
@@ -139,6 +141,39 @@
 
 		<!-- Joining Spinner -->
 
+		<!-- Controls -->
+		{#if state == MenuStates.Controls}
+			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
+				<div class="menu shadow">
+					<div class="customControls">
+						<table class="textShadow">
+							<tr>
+								<th>Control</th>
+								<th>Input</th>
+							</tr>
+
+							{#each inputManager.gameCommands as command}
+								<tr>
+									<td>{command.label}</td>
+									<td> {command.keyCode} </td>
+								</tr>
+							{/each}
+						</table>
+					</div>
+
+					<div class="controlButtons">
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
+							Back
+						</button>
+
+						<button class="menuButton shadow" on:click={() => buttonClick(MenuStates.MainMenu)}>
+							Save
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
 		<!-- High Scores -->
 		{#if state == MenuStates.HighScores}
 			<div in:fly|global={{ x: -200, duration: 1000 }} class="menuContainer">
@@ -146,7 +181,7 @@
 					<div class="scores">
 						{#each highScores as score}
 							<h3 class="textShadow">
-								{score.name.slice(0, 9) + (score.name.length > 0 ? '...' : '')} - {score.score}
+								{score.name.slice(0, 9) + (score.name.length > 10 ? '...' : '')} - {score.score}
 							</h3>
 						{/each}
 					</div>
@@ -272,6 +307,10 @@
 {/if}
 
 <style>
+	th,
+	td {
+		padding: 8px;
+	}
 	.container {
 		display: flex;
 		align-items: center;
@@ -317,6 +356,19 @@
 		width: 100%;
 		height: 100%;
 		z-index: -1;
+	}
+
+	.customControls {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		align-content: center;
+		flex-wrap: nowrap;
+		justify-content: flex-start;
+	}
+
+	.customControls tr {
+		font-size: 1.5rem;
 	}
 
 	.scores {

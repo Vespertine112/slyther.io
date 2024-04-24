@@ -60,18 +60,18 @@
 				canvas.height = canvasHeight;
 			}
 
-			game.processInput(elapsedTime);
-
-			game.update(elapsedTime);
-
-			game.render();
-
-			frameCounter++;
-			frameTimer += elapsedTime;
-
-			game = game;
-
 			if (game.gameState != GameStatusEnum.Idle) {
+				game?.processInput(elapsedTime);
+
+				game?.update(elapsedTime);
+
+				game?.render();
+
+				frameCounter++;
+				frameTimer += elapsedTime;
+
+				game = game;
+
 				requestAnimationFrame(gameLoop);
 			}
 		}
@@ -99,7 +99,6 @@
 			highScores.sort((a, b) => b.score - a.score);
 
 			localStorage.setItem('slyther.io.highScores', JSON.stringify(highScores));
-			game.exit();
 		}
 	}
 </script>
