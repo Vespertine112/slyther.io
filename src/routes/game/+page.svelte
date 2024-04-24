@@ -135,7 +135,7 @@
 			<hr style="width: 100%" />
 			<ol style="margin: 0;">
 				{#each game.leaderBoard as leader}
-					<li class="displayText">{leader.name}</li>
+					<li class="displayText"><span class="truncate">{leader.name}</span></li>
 				{/each}
 			</ol>
 		</div>
@@ -252,10 +252,9 @@
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		align-content: space-around;
-		flex-wrap: wrap;
-		align-items: center;
 		justify-content: flex-start;
 		z-index: 100;
+		max-width: 15%;
 	}
 
 	.losepane {

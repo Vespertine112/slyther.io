@@ -28,7 +28,7 @@ export class Player {
 	 */
 	state: PlayerStates = PlayerStates.ALIVE;
 
-	protected readonly bodyOffset: number = 0.01; // Offset for body parts
+	protected readonly bodyOffset: number = 0.007; // Offset for body parts
 
 	constructor(clientId: string, pos: Position) {
 		this.clientId = clientId;
@@ -129,14 +129,11 @@ export class Player {
 				ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
 			}
 
-			if (distance < this.bodyOffset) {
-				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
-				continue;
-			}
-
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
-			this.directions[i] = Math.atan2(deltaY, deltaX);
+			if (i == this.positions.length - 1) {
+				this.directions[i] = Math.atan2(deltaY, deltaX);
+			}
 
 			// Check if the body part has reached its target position
 			if (distance <= this.speed * elapsedTime * (multiplier ?? 1) || ratio == 0) {

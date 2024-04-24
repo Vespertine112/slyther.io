@@ -154,7 +154,8 @@ export class Renderer {
 		const textX = canvasPos.x + adjustedPlayerSize / 2;
 		const textY = canvasPos.y - adjustedPlayerSize / 2 - 10;
 
-		this.ctx.fillText(playerName, textX, textY);
+		let truncatedName = `${playerName.slice(0, 9)}` + (playerName.length > 10 ? '...' : '');
+		this.ctx.fillText(truncatedName, textX, textY);
 	}
 
 	/**

@@ -145,7 +145,9 @@
 				<div class="menu shadow">
 					<div class="scores">
 						{#each highScores as score}
-							<h3 class="textShadow">{score.name} - {score.score}</h3>
+							<h3 class="textShadow">
+								{score.name.slice(0, 9) + (score.name.length > 0 ? '...' : '')} - {score.score}
+							</h3>
 						{/each}
 					</div>
 
