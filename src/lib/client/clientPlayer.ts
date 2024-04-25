@@ -13,6 +13,7 @@ export class ClientPlayer extends Player {
 
 	musicManager: MusicManager = MusicManager.getInstance();
 	particleSystem!: ParticleSystem;
+	tpsStorageTest: any;
 
 	constructor(
 		clientId: string,

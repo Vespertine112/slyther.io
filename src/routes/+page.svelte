@@ -114,6 +114,7 @@
 				zenMode: zenModeSetting
 			})
 		);
+		MusicManager.getInstance().updateSettings();
 	}
 
 	function buttonClick(newState: MenuStates) {

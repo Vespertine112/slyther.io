@@ -30,13 +30,13 @@ export default class InputManager {
 	 */
 	private customGameCommands: { label: string; keyCode: string; command: CustomCommands }[] = [
 		{ label: 'Boost', keyCode: 'Space Bar', command: CustomCommands.Boost },
-		{ label: 'Rotate Right', keyCode: 'ArrowRight', command: CustomCommands.RotateRight },
-		{ label: 'Rotate Left', keyCode: 'ArrowLeft', command: CustomCommands.RotateLeft },
+		{ label: 'Rotate Right', keyCode: 'd', command: CustomCommands.RotateRight },
+		{ label: 'Rotate Left', keyCode: 'a', command: CustomCommands.RotateLeft },
 		{ label: 'Mouse', keyCode: 'Mouse Move', command: CustomCommands.MouseMove },
-		{ label: 'Turn Up', keyCode: 'w', command: CustomCommands.TurnUp },
-		{ label: 'Turn Down', keyCode: 's', command: CustomCommands.TurnDown },
-		{ label: 'Turn Right', keyCode: 'd', command: CustomCommands.TurnRight },
-		{ label: 'Turn Left', keyCode: 'a', command: CustomCommands.TurnLeft }
+		{ label: 'Turn Up', keyCode: 'ArrowUp', command: CustomCommands.TurnUp },
+		{ label: 'Turn Down', keyCode: 'ArrowDown', command: CustomCommands.TurnDown },
+		{ label: 'Turn Right', keyCode: 'ArrowRight', command: CustomCommands.TurnRight },
+		{ label: 'Turn Left', keyCode: 'ArrowLeft', command: CustomCommands.TurnLeft }
 	];
 	private customGameCommandCombos: {
 		label: string;
@@ -97,7 +97,7 @@ export default class InputManager {
 			// Resolve custom commnds to their handlers
 			if (this.handlers.hasOwnProperty(key)) {
 				// Fire imediately the first press
-				if (!this.handlers[key].options.hasFired) {
+				if (!this.handlers[key].options.hasFired && this.handlers[key]) {
 					this.handlers[key].handler(elapsedTime);
 					this.handlers[key].options.hasFired = true;
 
@@ -136,10 +136,15 @@ export default class InputManager {
 
 		let key = this.resolveKey(event.key);
 		this.activeKeys[key] = true;
+
+		// Activate Combos
+		this.activateCombos();
 	}
 
 	keyRelease(event: KeyboardEvent) {
 		let keyCode = this.resolveKey(event.key);
+		this.deactivateCombos(keyCode);
+
 		if (this.handlers.hasOwnProperty(keyCode)) {
 			if (
 				(this.handlers[keyCode].options?.toggledControl && !this.handlers[keyCode].options.toggledOn) ||
@@ -205,7 +210,7 @@ export default class InputManager {
 
 	private mapCustomCommand(keyCode: string, newCommand: CustomCommands) {
 		this.customGameCommands.map((custCommand) => {
-			if (custCommand.command === newCommand) {
+			if (custCommand.command === newCommand && newCommand !== CustomCommands.MouseMove) {
 				custCommand.keyCode = keyCode;
 			}
 		});
@@ -213,8 +218,6 @@ export default class InputManager {
 
 	/**
 	 * Matches keys against custom codes, combos, or no-op
-	 * NOTE! IF A COMBO IS MATCHED, THE CONSITUIENT KEYS ARE TURNED OFF!
-	 * THIS IS A HACKY SIDE-EFFECT FUNCTION, I KNOW
 	 */
 	private resolveKey(keyCode: string): string {
 		let returnCode = keyCode;
@@ -233,22 +236,53 @@ export default class InputManager {
 			}
 		}
 
-		// for (let i = 0; i < this.customGameCommandCombos.length; i++) {
-		// 	const combo = this.customGameCommandCombos[i];
-		// 	const matchCommands = combo.matchCommands.filter((command) => this.activeKeys[command]);
-		// 	console.log(matchCommands);
-		//
-		// 	if (matchCommands.length === combo.matchCommands.length) {
-		// 		// All constituent commands of the combo are active, deactivate them
-		// 		combo.matchCommands.forEach((command) => {
-		// 			this.activeKeys[command] = false;
-		// 		});
-		// 		returnCode = combo.command;
-		// 		break; // Found a matching combo, no need to continue searching
-		// 	}
-		// }
-		//
 		return returnCode;
+	}
+
+	private activateCombos() {
+		for (let i = 0; i < this.customGameCommandCombos.length; i++) {
+			const combo = this.customGameCommandCombos[i];
+			const matchCommands = combo.matchCommands.filter((command) => this.activeKeys[command]);
+
+			if (matchCommands.length === combo.matchCommands.length) {
+				// All constituent commands of the combo are active, deactivate them
+				combo.matchCommands.forEach((command) => {
+					this.activeKeys[command] = false;
+				});
+				this.activeKeys[combo.command] = true;
+				break; // Found a matching combo, no need to continue searching
+			}
+		}
+	}
+
+	/**
+	 * Deactivates combos
+	 * @param keyCode - the released key which will potentially break a combo
+	 * NOTE!: To allow nkro, the other keys in the combo command will fire
+	 */
+	private deactivateCombos(keyCode: string) {
+		for (let i = 0; i < this.customGameCommandCombos.length; i++) {
+			const combo = this.customGameCommandCombos[i];
+			const matchCommands = combo.matchCommands.filter((command) => this.activeKeys[command] == false);
+
+			if (matchCommands.length === combo.matchCommands.length) {
+				combo.matchCommands.forEach((command) => {
+					if (this.activeKeys.hasOwnProperty(command) && command == keyCode) {
+						delete this.activeKeys[command];
+					} else {
+						this.activeKeys[command] = true;
+						this.handlers[command].options.hasFired = false;
+					}
+				});
+
+				this.handlers[combo.command].options.hasFired = false;
+				this.handlers[combo.command].fireTimeTracker = 0;
+				this.handlers[combo.command].release?.(undefined);
+
+				delete this.activeKeys[combo.command];
+				break; // Found a matching combo, no need to continue searching
+			}
+		}
 	}
 
 	// Load up custom commands from localStorage

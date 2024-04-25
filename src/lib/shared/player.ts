@@ -9,8 +9,11 @@ export class Player {
 	clientId: string;
 	name: string = '';
 
+	score: number = 0;
 	length!: number; // Represents player length
+	maxLength: number = 400;
 	size!: number; // Player size (length / width for body parts)
+	maxSize: number = 1 / 40;
 	speed!: number;
 	rotateRate: number = Math.PI / 300;
 	positions: Position[] = [];
@@ -89,25 +92,27 @@ export class Player {
 				foodsEaten.push(foodId);
 
 				this.reportUpdate = true;
-				this.length += Math.floor(food.size);
-				if (this.size < 1 / 40) this.size += 1 / 100000;
+				this.score++;
+				if (this.size < this.maxSize) this.size += 1 / 100000;
+				if (this.length < this.maxLength) {
+					this.length += Math.floor(food.size);
+					// Calculate angle between the last position and the second-to-last position
+					const lastPos = this.positions[this.positions.length - 1];
+					const prevPos = this.positions[this.positions.length - 2];
+					const deltaX = prevPos.x - lastPos.x;
+					const deltaY = prevPos.y - lastPos.y;
+					const angle = Math.atan2(deltaY, deltaX);
 
-				// Calculate angle between the last position and the second-to-last position
-				const lastPos = this.positions[this.positions.length - 1];
-				const prevPos = this.positions[this.positions.length - 2];
-				const deltaX = prevPos.x - lastPos.x;
-				const deltaY = prevPos.y - lastPos.y;
-				const angle = Math.atan2(deltaY, deltaX);
+					// Calculate offset for new body part
+					const offsetX = Math.cos(angle) * this.bodyOffset;
+					const offsetY = Math.sin(angle) * this.bodyOffset;
 
-				// Calculate offset for new body part
-				const offsetX = Math.cos(angle) * this.bodyOffset;
-				const offsetY = Math.sin(angle) * this.bodyOffset;
+					// Add new body part at correct offset
+					const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
+					newPos.trackingId = this.positions.at(-2)?.trackingId.valueOf()!;
 
-				// Add new body part at correct offset
-				const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
-				newPos.trackingId = this.positions.at(-1)?.trackingId!;
-
-				this.positions.push(newPos);
+					this.positions.push(newPos);
+				}
 			}
 		}
 
@@ -148,22 +153,20 @@ export class Player {
 				deltaY = head.y - pos.y;
 				distance = Math.hypot(deltaX, deltaY);
 				ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
-
-				if (ratio === Infinity) {
-					deltaX = head.x - pos.x;
-					deltaY = head.y - pos.y;
-					distance = Math.hypot(deltaX, deltaY);
-					ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
-				}
 			}
 
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
 
 			// Add loop to handle passing multiple turn points in a single frame
+			let amTail = i === this.positions.length - 1;
+			// TPS DESYNC HANDLING
+			while (pos.trackingId < this.tpsIdx && !this.tps[pos.trackingId]) {
+				pos.trackingId++;
+			}
 			while (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
 				// Remove old points from tps after the tail reaches them
-				if (i == this.positions.length - 1 && this.tps[pos.trackingId]) {
+				if (amTail && this.tps[pos.trackingId]) {
 					delete this.tps[pos.trackingId];
 				}
 
@@ -173,6 +176,11 @@ export class Player {
 
 				distance = Math.hypot(this.tps[pos.trackingId].x - pos.x, this.tps[pos.trackingId].y - pos.y);
 			}
+		}
+
+		// DESYNC FIX - Cleaning out old tps
+		for (let i = 0; i < this.positions.at(-1)?.trackingId!; i++) {
+			delete this.tps[i];
 		}
 
 		const headDeltaX = Math.cos(this.direction) * this.speed * (multiplier ?? 1) * elapsedTime;
@@ -210,16 +218,17 @@ export class Player {
 			let angleDiff = this.shortestAngularDistance(this.direction, this.targetSnapAngle);
 			let rotationDirection = Math.sign(angleDiff);
 
-			let newDirection = this.direction + rotationDirection * this.rotateRate * elapsedTime;
+			// Use the same rotateRate for snap turns as for rotational turns
+			let newDirection = this.direction + ((rotationDirection * this.rotateRate) / 2) * elapsedTime;
 
-			if (Math.abs(angleDiff) < Math.abs(rotationDirection * this.rotateRate * elapsedTime)) {
+			if (Math.abs(angleDiff) < Math.abs(((rotationDirection * this.rotateRate) / 2) * elapsedTime)) {
 				this.direction = this.targetSnapAngle;
 				this.targetSnapAngle = null;
 			} else {
 				this.direction = newDirection;
 			}
-
 			this.pushToTps();
+
 			this.reportUpdate = true;
 		}
 	}

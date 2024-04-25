@@ -7,7 +7,7 @@ export class ServerPlayer extends Player {
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
-		this.length = 60;
+		this.length = 6;
 		this.speed = 1 / 12500;
 		this.size = 1 / 120;
 		this.direction = this.calculateDirectionTowardsMiddle();

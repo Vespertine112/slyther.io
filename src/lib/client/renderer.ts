@@ -108,6 +108,10 @@ export class Renderer {
 
 			const bodySegPos = player.positions[idx];
 
+			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
+				continue;
+			}
+
 			// Direction calculation
 			let bodySegDir = player.direction;
 			if (idx > 1) {
@@ -116,10 +120,6 @@ export class Renderer {
 				const deltaX = prevPos.x - lastPos.x;
 				const deltaY = prevPos.y - lastPos.y;
 				bodySegDir = Math.atan2(deltaY, deltaX);
-			}
-
-			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
-				continue;
 			}
 
 			const canvasPos = this.translateGamePositionToCanvas(bodySegPos);

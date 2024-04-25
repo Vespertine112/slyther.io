@@ -136,7 +136,7 @@
 
 		<!-- Leaderboard -->
 		<div class="leaderBoard">
-			<h3 class="displayText" style="margin: 0;">Leaderboard</h3>
+			<h3 class="displayText" style="margin: 0; overflow: hidden; text-overflow: ellipsis;">Leaderboard</h3>
 			<hr style="width: 100%" />
 			<ol style="margin: 0;">
 				{#each game.leaderBoard as leader}
@@ -144,6 +144,13 @@
 				{/each}
 			</ol>
 		</div>
+
+		<!-- Connecting -->
+		{#if game.gameState == GameStatusEnum.Connecting}
+			<div out:blur={{ amount: 10, duration: 1500 }} class="displayPane">
+				<h1>Joining Game...</h1>
+			</div>
+		{/if}
 
 		<!-- Lose Panel -->
 		{#if game.gameState == GameStatusEnum.Lost}

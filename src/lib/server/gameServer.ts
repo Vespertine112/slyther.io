@@ -27,7 +27,7 @@ export class GameServer {
 	private foodCounter = 0;
 	/** Tracks which foods are dynamically added during a loop */
 	private foodsAdded: Food[] = [];
-	private leaderBoard: { name: string; clientId: string; length: number }[] = [];
+	private leaderBoard: { name: string; clientId: string; score: number }[] = [];
 
 	constructor() {
 		this.foodMap = {};
@@ -80,7 +80,6 @@ export class GameServer {
 			let input = processQueue.dequeue()!;
 			let client = this.activeClients[input.clientId];
 			if (!client) continue; // Handle input collision when sockets error
-			client.lastMessageId = input.message.id;
 			switch (input.message.type) {
 				case NetworkIds.INPUT_BOOST:
 					client.player.boost(input.message.elapsedTime);
@@ -163,12 +162,12 @@ export class GameServer {
 			}
 
 			if (player.state == PlayerStates.ALIVE) {
-				newLeaderboard.push({ clientId: player.clientId, name: player.name, length: player.length });
+				newLeaderboard.push({ clientId: player.clientId, name: player.name, score: player.score });
 			}
 		}
 
 		newLeaderboard.sort((a, b) => {
-			return b.length - a.length;
+			return b.score - a.score;
 		});
 		for (let i = 0; i < newLeaderboard.length; i++) {
 			const player = newLeaderboard[i];
@@ -220,6 +219,7 @@ export class GameServer {
 				speed: client.player.speed,
 				length: client.player.length,
 				size: client.player.size,
+				score: client.player.score,
 				tps: client.player.tpsAdded,
 				tpsIdx: client.player.tpsIdx
 			};
@@ -234,8 +234,10 @@ export class GameServer {
 				}
 			}
 
-			this.activeClients[clientId].player.tpsAdded = {};
-			this.activeClients[clientId].player.reportUpdate = false;
+			if (this.activeClients[clientId]) {
+				this.activeClients[clientId].player.tpsAdded = {};
+				this.activeClients[clientId].player.reportUpdate = false;
+			}
 		}
 	}
 

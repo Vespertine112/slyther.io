@@ -104,4 +104,17 @@ export class MusicManager {
 			sourceNode.stop();
 		}
 	}
+
+	updateSettings() {
+		this.soundSetting = JSON.parse(localStorage.getItem('slyther.io.settings') ?? '').sound ?? true;
+		if (!this.soundSetting) {
+			this.stopEverything();
+		}
+	}
+
+	private stopEverything() {
+		this.sourceNodes.forEach((node) => {
+			node.stop();
+		});
+	}
 }

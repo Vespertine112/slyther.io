@@ -16,7 +16,8 @@ export enum GameStatusEnum {
 	Playing,
 	Won,
 	Lost,
-	Idle
+	Idle,
+	Connecting
 }
 
 /**
@@ -59,7 +60,7 @@ export class Game {
 
 		this.registerKeyboardHandlers();
 
-		this.gameState = GameStatusEnum.Playing;
+		this.gameState = GameStatusEnum.Connecting;
 
 		this.socket.connect();
 
@@ -96,7 +97,7 @@ export class Game {
 					this.updatePlayerOther(message.data);
 					break;
 				case NetworkIds.UPDATE_NAME:
-					if (message.data.clientId == this.playerSelf.clientId) {
+					if (message.data.clientId == this.playerSelf?.clientId) {
 						this.playerSelf.name = message.data;
 					} else {
 						this.playerOthers[message.data.clientId].name = message.data.name;
@@ -132,7 +133,7 @@ export class Game {
 			this.playerOthers[id].update(elapsedTime);
 		}
 
-		this.playerScore = this.playerSelf?.length ?? 0;
+		this.playerScore = this.playerSelf?.score ?? 0;
 	}
 
 	render() {
@@ -220,12 +221,12 @@ export class Game {
 			player.direction = data.direction;
 			player.length = data.length;
 			player.size = data.size;
+			player.score = data.score;
 			player.head.direction = data.direction;
 			player.tpsIdx = data.tpsIdx;
 
-			for (let i = 0; i < Object.entries(data.tps).length; i++) {
-				const tp = Object.entries(data.tps)[i];
-				player.tps[tp[0]] = tp[1];
+			for (const [tpIdx, tp] of Object.entries(data.tps)) {
+				player.tps[tpIdx] = tp;
 			}
 		}
 	}
@@ -234,14 +235,14 @@ export class Game {
 		this.playerSelf.positions = data.positions;
 		this.playerSelf.direction = data.direction;
 		this.playerSelf.size = data.size;
+		this.playerSelf.score = data.score;
 		this.playerSelf.length = data.length;
 		this.playerSelf.head.direction = data.direction;
 		this.playerSelf.tpsIdx = data.tpsIdx;
 
 		// Diff the tps into the clients tps
-		for (let i = 0; i < Object.entries(data.tps).length; i++) {
-			const tp = Object.entries(data.tps)[i];
-			this.playerSelf.tps[tp[0]] = tp[1];
+		for (const [tpIdx, tp] of Object.entries(data.tps)) {
+			this.playerSelf.tps[tpIdx] = tp;
 		}
 
 		let done = false;
@@ -269,6 +270,9 @@ export class Game {
 					break;
 				case NetworkIds.INPUT_ROTATE_LEFT:
 					this.playerSelf.rotateLeft(message.elapsedTime);
+					break;
+				case NetworkIds.INPUT_SNAP_TURN:
+					this.playerSelf.snapTurn(message.elapsedTime);
 					break;
 			}
 			memory.enqueue(message);
@@ -340,17 +344,17 @@ export class Game {
 			this.playerSelf.snapTurn(-Math.PI / 2);
 		});
 
-		this.inputManager.registerCommand([CustomCommands.TurnDown], { fireOnce: true }, (elapsedTime) => {
+		this.inputManager.registerCommand([CustomCommands.UpRight], { fireOnce: true }, (elapsedTime) => {
 			let message = {
 				id: this.messageId++,
 				elapsedTime: elapsedTime,
 				type: NetworkIds.INPUT_SNAP_TURN,
-				turnAngle: Math.PI / 2, // Snap angle for turning down
+				turnAngle: -Math.PI / 4, // Snap angle for turning upright
 				currentTime: performance.now()
 			};
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
-			this.playerSelf.snapTurn(Math.PI / 2);
+			this.playerSelf.snapTurn(-Math.PI / 4);
 		});
 
 		this.inputManager.registerCommand([CustomCommands.TurnRight], { fireOnce: true }, (elapsedTime) => {
@@ -366,6 +370,45 @@ export class Game {
 			this.playerSelf.snapTurn(0);
 		});
 
+		this.inputManager.registerCommand([CustomCommands.DownRight], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: Math.PI / 4, // Snap angle for turning up
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(Math.PI / 4);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.TurnDown], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: Math.PI / 2, // Snap angle for turning down
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn(Math.PI / 2);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.DownLeft], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: (3 * Math.PI) / 4, // Snap angle for turning down
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn((3 * Math.PI) / 4);
+		});
+
 		this.inputManager.registerCommand([CustomCommands.TurnLeft], { fireOnce: true }, (elapsedTime) => {
 			let message = {
 				id: this.messageId++,
@@ -377,6 +420,19 @@ export class Game {
 			this.socket.emit(NetworkIds.INPUT, message);
 			this.messageHistory.enqueue(message);
 			this.playerSelf.snapTurn(Math.PI);
+		});
+
+		this.inputManager.registerCommand([CustomCommands.UpLeft], { fireOnce: true }, (elapsedTime) => {
+			let message = {
+				id: this.messageId++,
+				elapsedTime: elapsedTime,
+				type: NetworkIds.INPUT_SNAP_TURN,
+				turnAngle: (-3 * Math.PI) / 4, // Snap angle for turning left
+				currentTime: performance.now()
+			};
+			this.socket.emit(NetworkIds.INPUT, message);
+			this.messageHistory.enqueue(message);
+			this.playerSelf.snapTurn((-3 * Math.PI) / 4);
 		});
 
 		this.inputManager.registerCommand([CustomCommands.Boost], { fireOnce: false }, (elapsedTime) => {
@@ -476,6 +532,8 @@ export class Game {
 		let psPos = new Position(this.playerSelf.positions[0].x, this.playerSelf.positions[0].y);
 		let ps = new ParticleSystem(this.canvas, psPos, this.renderer, false, eatParticles);
 		this.playerSelf.particleSystem = ps;
+
+		this.gameState = GameStatusEnum.Playing;
 	}
 
 	private connectPlayerOther(data) {
