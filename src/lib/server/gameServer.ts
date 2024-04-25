@@ -161,6 +161,7 @@ export class GameServer {
 		let deadPlayers: string[] = [];
 		let leaderboardChanged = false;
 		let newLeaderboard = [];
+
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
 			if (player.state == PlayerStates.DEAD) {
@@ -228,7 +229,9 @@ export class GameServer {
 				positions: client.player.positions,
 				speed: client.player.speed,
 				length: client.player.length,
-				size: client.player.size
+				size: client.player.size,
+				tps: client.player.tps,
+				tpsIdx: client.player.tpsIdx
 			};
 
 			if (client.player.reportUpdate) {

@@ -4,12 +4,7 @@
     -   Show joing message
 -   Tutorial message "how to use keyboard"
 
--   Controls setup
-    -   User defined
-    -   Mouse / Dynamic Keyboard / Standard Keyboard
--   Fix Long names
-    -   Only render w/ collision
-    -   Truncate on leaderboard & render
+-   Remove dir array, just diff the direction
 
 # Features:
 

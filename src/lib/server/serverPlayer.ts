@@ -47,7 +47,7 @@ export class ServerPlayer extends Player {
 			x -= offsetX;
 			y -= offsetY;
 			let newPos = new Position(x, y);
-			newPos.prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
+			newPos.next = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			this.positions.push(newPos);
 			this.directions.push(this.directions[0]);
 		}

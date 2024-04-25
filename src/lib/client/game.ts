@@ -221,6 +221,8 @@ export class Game {
 			player.length = data.length;
 			player.size = data.size;
 			player.head.direction = data.direction;
+			player.tps = data.tps;
+			player.tpsIdx = data.tpsIdx;
 		}
 	}
 
@@ -230,6 +232,8 @@ export class Game {
 		this.playerSelf.size = data.size;
 		this.playerSelf.length = data.length;
 		this.playerSelf.head.direction = data.direction;
+		this.playerSelf.tps = data.tps;
+		this.playerSelf.tpsIdx = data.tpsIdx;
 
 		let done = false;
 		while (!done && !this.messageHistory.empty) {

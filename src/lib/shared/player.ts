@@ -15,6 +15,8 @@ export class Player {
 	rotateRate: number = Math.PI / 300;
 	positions: Position[] = [];
 	directions: number[] = []; // Direction(s) in radians for each body part
+	tps: { [idx: number]: Position } = {};
+	tpsIdx = 0;
 
 	reportUpdate: boolean = false;
 	eatenFoods: string[] = [];
@@ -26,7 +28,7 @@ export class Player {
 	 */
 	state: PlayerStates = PlayerStates.ALIVE;
 
-	protected readonly bodyOffset: number = 0.007; // Offset for body parts
+	protected readonly bodyOffset: number = 0.004; // Offset for body parts
 	private targetSnapAngle: number | null = null;
 
 	constructor(clientId: string, pos: Position) {
@@ -51,6 +53,8 @@ export class Player {
 
 		// Increment direction angle
 		this.directions[0] += this.rotateRate * elapsedTime;
+
+		this.pushToTps();
 	}
 
 	// Rotates a player's head left
@@ -61,6 +65,7 @@ export class Player {
 
 		// Decrement direction angle
 		this.directions[0] -= this.rotateRate * elapsedTime;
+		this.pushToTps();
 	}
 
 	snapTurn(angle: number) {
@@ -93,9 +98,8 @@ export class Player {
 				// Add new body part at correct offset
 				const lastPos = this.positions[this.positions.length - 1];
 				const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
-				newPos.prev = new Position(lastPos.x, lastPos.y);
-
 				const newDir = Math.atan2(newPos.y - lastPos.y, newPos.x - lastPos.x);
+				newPos.trackingId = this.positions.at(-1)?.trackingId!;
 
 				this.positions.push(newPos);
 
@@ -118,44 +122,66 @@ export class Player {
 		this.moveSnakeForward(elapsedTime);
 	}
 
+	/**
+	 * Slither the snake body forward!
+	 */
 	private moveSnakeForward(elapsedTime: number, multiplier?: number) {
-		if (this.state != PlayerStates.ALIVE) return;
+		if (this.state !== PlayerStates.ALIVE) return;
 
-		// Update tail position to chase the body part in front of it
 		for (let i = this.positions.length - 1; i > 0; i--) {
-			let deltaX = this.positions[i].prev!.x - this.positions[i].x;
-			let deltaY = this.positions[i].prev!.y - this.positions[i].y;
-			let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			const pos = this.positions[i];
 
-			let ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+			let deltaX, deltaY, distance, ratio;
 
-			// HACK: This is a bad solution to the floating point issue w/ js on browser :(
-			if (ratio == Infinity) {
-				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
-
-				deltaX = this.positions[i].prev!.x - this.positions[i].x;
-				deltaY = this.positions[i].prev!.y - this.positions[i].y;
-				distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			if (this.tps[pos.trackingId]) {
+				const tpsPos = this.tps[pos.trackingId];
+				deltaX = tpsPos.x - pos.x;
+				deltaY = tpsPos.y - pos.y;
+				distance = Math.hypot(deltaX, deltaY);
 				ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+			} else {
+				const head = this.positions[0];
+				deltaX = head.x - pos.x;
+				deltaY = head.y - pos.y;
+				distance = Math.hypot(deltaX, deltaY);
+				ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+
+				if (ratio === Infinity) {
+					deltaX = head.x - pos.x;
+					deltaY = head.y - pos.y;
+					distance = Math.hypot(deltaX, deltaY);
+					ratio = (this.speed * (multiplier ?? 1) * elapsedTime) / distance;
+				}
 			}
 
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
 			this.directions[i] = Math.atan2(deltaY, deltaX);
 
-			// Check if the body part has reached its target position
-			if (distance <= this.speed * elapsedTime * (multiplier ?? 1) || ratio == 0) {
-				this.positions[i].prev = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
+			// Add loop to handle passing multiple turn points in a single frame
+			while (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
+				// Remove old points from tps after the tail reaches them
+				if (i == this.positions.length - 1 && this.tps[pos.trackingId]) {
+					delete this.tps[pos.trackingId];
+				}
+
+				pos.trackingId++;
+
+				if (!this.tps[pos.trackingId]) break;
+
+				distance = Math.hypot(this.tps[pos.trackingId].x - pos.x, this.tps[pos.trackingId].y - pos.y);
 			}
 		}
 
-		// Update head position and direction
 		const headDeltaX = Math.cos(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
 		const headDeltaY = Math.sin(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
 	}
 
+	/**
+	 * Check for a point collision w/ snake head
+	 */
 	headCollisionCheck(pos: Position): boolean {
 		// Calculate distance between player's head and the provided point
 		const deltaX = this.positions[0].x - pos.x;
@@ -191,7 +217,15 @@ export class Player {
 				this.directions[0] = newDirection;
 			}
 
+			this.pushToTps();
 			this.reportUpdate = true;
 		}
+	}
+
+	/**
+	 * Add heads position to top of tps
+	 */
+	private pushToTps() {
+		this.tps[this.tpsIdx++] = structuredClone(this.positions[0]);
 	}
 }

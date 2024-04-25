@@ -4,8 +4,8 @@
 export class Position {
 	x: number;
 	y: number;
-	prev: Position | undefined;
 	next: Position | undefined;
+	trackingId: number = 0;
 
 	constructor(x: number, y: number) {
 		this.x = x;

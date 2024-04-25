@@ -476,7 +476,4 @@
 	.scores > h3 {
 		margin: 0.5rem 0 0.5rem 0;
 	}
-
-	.settingCheckbox {
-	}
 </style>
