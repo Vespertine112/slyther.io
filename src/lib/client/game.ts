@@ -197,7 +197,7 @@ export class Game {
 		headExplosionPS.turnOffAfter(125);
 		this.particleSystems.push(headExplosionPS);
 
-		this.musicManager?.playMusic('playerDeathSound', false);
+		this.musicManager?.playSound('playerDeathSound', false);
 
 		delete this.playerOthers[data.clientId];
 	}

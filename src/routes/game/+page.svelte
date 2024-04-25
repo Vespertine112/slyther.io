@@ -269,7 +269,6 @@
 		align-content: space-around;
 		justify-content: flex-start;
 		z-index: 100;
-		max-width: 15%;
 	}
 
 	.losepane {
