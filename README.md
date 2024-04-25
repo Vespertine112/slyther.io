@@ -5,10 +5,10 @@
 
 # Usage:
 
-- ```$npm install```
-- ```$npm run dev```
+- ```$ npm install```
+- ```$ npm run dev```
 
-#
+# Demo:
 
 - You can watch a full demo [here](https://www.youtube.com/watch?v=Ma6ILRWCc4o)
 
