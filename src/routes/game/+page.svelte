@@ -11,6 +11,7 @@
 	$: canvasHeight = 100;
 	$: show = false;
 	let canvas: HTMLCanvasElement;
+	let gameWrapperDiv: HTMLDivElement;
 	let lastTimestamp = performance.now();
 	let highScores: { name: string; score: number }[] = [];
 	let zenMode = false;
@@ -88,7 +89,7 @@
 		});
 
 		if (zenMode) {
-			canvas.requestFullscreen();
+			gameWrapperDiv.requestFullscreen();
 		}
 
 		game.initalizeGame(canvas, inputManager, playerName);
@@ -107,6 +108,11 @@
 			localStorage.setItem('slyther.io.highScores', JSON.stringify(highScores));
 		}
 	}
+
+	function fingiemove(event: TouchEvent) {
+		let pos = event.changedTouches.item(0);
+		inputManager.mouseMove({ x: pos?.clientX, y: pos?.clientY });
+	}
 </script>
 
 <svelte:window
@@ -114,10 +120,11 @@
 	on:keyup={keyReleaseHandler}
 	on:mousemove={mouseMoveHandler}
 	on:mouseup={mouseUpHandler}
+	on:touchmove={fingiemove}
 />
 
 {#if show}
-	<div class="mainWrapper" bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
+	<div class="mainWrapper" bind:this={gameWrapperDiv} bind:clientWidth={canvasWidth} bind:clientHeight={canvasHeight}>
 		<div class="scoreCard displayText">
 			<h1 style="margin:0;">{game.playerScore}</h1>
 		</div>
@@ -136,11 +143,13 @@
 
 		<!-- Leaderboard -->
 		<div class="leaderBoard">
-			<h3 class="displayText" style="margin: 0; overflow: hidden; text-overflow: ellipsis;">Leaderboard</h3>
+			<h3 class="displayText" style="margin: 0; overflow: hidden; text-overflow: ellipsis; font-size: small;">
+				Leaderboard
+			</h3>
 			<hr style="width: 100%" />
 			<ol style="margin: 0;">
 				{#each game.leaderBoard as leader}
-					<li class="displayText"><span class="truncate">{leader.name}</span></li>
+					<li class="displayText"><span class="truncate">{leader.name.slice(0, 10)}</span></li>
 				{/each}
 			</ol>
 		</div>
@@ -244,9 +253,11 @@
 		position: absolute;
 		display: flex;
 		flex-direction: row;
-		left: 45%;
-		right: 45%;
+		left: 0;
+		right: 0;
 		top: 0.5rem;
+		margin-left: auto;
+		margin-right: auto;
 		background: rgb(00, 00, 00, 0.5);
 		padding: 0.5rem;
 		border-radius: 0.5rem;
@@ -255,6 +266,7 @@
 		align-content: center;
 		align-items: center;
 		z-index: 100;
+		width: fit-content;
 	}
 
 	.leaderBoard {

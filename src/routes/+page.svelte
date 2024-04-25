@@ -16,7 +16,7 @@
 	$: state = MenuStates.MainMenu;
 
 	let name = '';
-	let zenModeSetting = false;
+	let zenModeSetting = true;
 	let soundSetting = true;
 	let highScores: { name: string; score: number }[] = [];
 	let canvas: HTMLCanvasElement;
@@ -43,7 +43,7 @@
 				'slyther.io.settings',
 				JSON.stringify({
 					sound: true,
-					zenMode: false
+					zenMode: true
 				})
 			);
 		}
@@ -266,7 +266,7 @@
 								</td>
 							</tr>
 
-							<p style="font-size: small;"><i>*Full-Screen (no HUD)*</i></p>
+							<p style="font-size: small;"><i>*Full-Screen*</i></p>
 							<tr>
 								<td> Sound </td>
 								<td>
