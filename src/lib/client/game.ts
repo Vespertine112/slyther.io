@@ -221,8 +221,12 @@ export class Game {
 			player.length = data.length;
 			player.size = data.size;
 			player.head.direction = data.direction;
-			player.tps = data.tps;
 			player.tpsIdx = data.tpsIdx;
+
+			for (let i = 0; i < Object.entries(data.tps).length; i++) {
+				const tp = Object.entries(data.tps)[i];
+				player.tps[tp[0]] = tp[1];
+			}
 		}
 	}
 
@@ -232,8 +236,13 @@ export class Game {
 		this.playerSelf.size = data.size;
 		this.playerSelf.length = data.length;
 		this.playerSelf.head.direction = data.direction;
-		this.playerSelf.tps = data.tps;
 		this.playerSelf.tpsIdx = data.tpsIdx;
+
+		// Diff the tps into the clients tps
+		for (let i = 0; i < Object.entries(data.tps).length; i++) {
+			const tp = Object.entries(data.tps)[i];
+			this.playerSelf.tps[tp[0]] = tp[1];
+		}
 
 		let done = false;
 		while (!done && !this.messageHistory.empty) {
@@ -494,7 +503,6 @@ export class Game {
 	 */
 	addRandomFoodToMap(numFood: number) {
 		let foodAssetNames: string[] = [];
-		let addedFoods: Food[] = [];
 		for (let { name } of foodFiles) {
 			foodAssetNames.push(name);
 		}

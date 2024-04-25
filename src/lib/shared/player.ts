@@ -16,6 +16,7 @@ export class Player {
 	positions: Position[] = [];
 	direction: number = 0; // Direction(s) in radians for head
 	tps: { [idx: number]: Position } = {};
+	tpsAdded: { [idx: number]: Position } = {};
 	tpsIdx = 0;
 
 	reportUpdate: boolean = false;
@@ -227,6 +228,8 @@ export class Player {
 	 * Add heads position to top of tps
 	 */
 	private pushToTps() {
-		this.tps[this.tpsIdx++] = structuredClone(this.positions[0]);
+		this.tpsAdded[this.tpsIdx] = structuredClone(this.positions[0]);
+		this.tps[this.tpsIdx] = structuredClone(this.positions[0]);
+		this.tpsIdx++;
 	}
 }

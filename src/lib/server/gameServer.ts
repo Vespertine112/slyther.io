@@ -144,29 +144,19 @@ export class GameServer {
 
 			if (hasCollided) {
 				this.placeFoodOnDeadPlayersBody(clientId);
-				this.log(`[Player Died] ${clientId}`);
+				this.log(`[Player Died] [${player.name}] ${player.clientId}`);
 			}
 		}
-	}
-
-	private placeFoodOnDeadPlayersBody(clientId: string) {
-		const player = this.activeClients[clientId].player;
-		const foodSize = 6;
-		this.addSpecificFoodToMap(player.positions, foodSize);
 	}
 
 	updateClients(elapsedTime: number) {
 		// Aggregate consumed foods / player deaths / leaderboard
 		let foodsEaten: string[] = [];
-		let deadPlayers: string[] = [];
 		let leaderboardChanged = false;
 		let newLeaderboard = [];
 
 		for (let clientId in this.activeClients) {
 			let player = this.activeClients[clientId].player;
-			if (player.state == PlayerStates.DEAD) {
-				deadPlayers.push(clientId);
-			}
 
 			if (player.eatenFoods.length > 0) {
 				foodsEaten = foodsEaten.concat(player.eatenFoods);
@@ -230,7 +220,7 @@ export class GameServer {
 				speed: client.player.speed,
 				length: client.player.length,
 				size: client.player.size,
-				tps: client.player.tps,
+				tps: client.player.tpsAdded,
 				tpsIdx: client.player.tpsIdx
 			};
 
@@ -243,9 +233,8 @@ export class GameServer {
 					}
 				}
 			}
-		}
 
-		for (let clientId in this.activeClients) {
+			this.activeClients[clientId].player.tpsAdded = {};
 			this.activeClients[clientId].player.reportUpdate = false;
 		}
 	}
@@ -349,6 +338,12 @@ export class GameServer {
 	// Kills the game server
 	exit() {
 		this.quit = true;
+	}
+
+	private placeFoodOnDeadPlayersBody(clientId: string) {
+		const player = this.activeClients[clientId].player;
+		const foodSize = 6;
+		this.addSpecificFoodToMap(player.positions, foodSize);
 	}
 
 	private getValidPostitionForNewPlayer(): Position {
