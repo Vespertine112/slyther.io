@@ -107,7 +107,16 @@ export class Renderer {
 			if (idx > 0 && idx < player.positions.length - 1) currentEntity = player.body;
 
 			const bodySegPos = player.positions[idx];
-			const bodySegDir = player.directions[idx];
+
+			// Direction calculation
+			let bodySegDir = player.direction;
+			if (idx > 1) {
+				const lastPos = player.positions[idx - 1];
+				const prevPos = player.positions[idx - 2];
+				const deltaX = prevPos.x - lastPos.x;
+				const deltaY = prevPos.y - lastPos.y;
+				bodySegDir = Math.atan2(deltaY, deltaX);
+			}
 
 			if (!this.viewportCircleCollisionCheck(bodySegPos, player.size)) {
 				continue;

@@ -225,7 +225,7 @@ export class GameServer {
 			let update = {
 				clientId: clientId,
 				lastMessageId: client.lastMessageId,
-				directions: client.player.directions,
+				direction: client.player.direction,
 				positions: client.player.positions,
 				speed: client.player.speed,
 				length: client.player.length,
@@ -259,7 +259,7 @@ export class GameServer {
 				if (newPlayer.clientId !== clientId) {
 					client.socket.emit(NetworkIds.CONNECT_OTHER, {
 						clientId: newPlayer.clientId,
-						directions: newPlayer.directions,
+						direction: newPlayer.direction,
 						positions: newPlayer.positions,
 						rotateRate: newPlayer.rotateRate,
 						speed: newPlayer.speed,
@@ -270,7 +270,7 @@ export class GameServer {
 
 					socket.emit(NetworkIds.CONNECT_OTHER, {
 						clientId: client.player.clientId,
-						directions: client.player.directions,
+						direction: client.player.direction,
 						positions: client.player.positions,
 						rotateRate: client.player.rotateRate,
 						speed: client.player.speed,
@@ -307,7 +307,7 @@ export class GameServer {
 			};
 
 			socket.emit(NetworkIds.CONNECT_ACK, {
-				directions: newPlayer.directions,
+				direction: newPlayer.direction,
 				positions: newPlayer.positions,
 				length: newPlayer.length,
 				size: newPlayer.size,

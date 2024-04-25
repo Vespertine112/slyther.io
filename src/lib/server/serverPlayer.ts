@@ -7,10 +7,10 @@ export class ServerPlayer extends Player {
 
 	constructor(clientId: string, pos: Position) {
 		super(clientId, pos);
-		this.length = 6;
+		this.length = 60;
 		this.speed = 1 / 12500;
 		this.size = 1 / 120;
-		this.directions.push(this.calculateDirectionTowardsMiddle()); // Set direction towards the middle
+		this.direction = this.calculateDirectionTowardsMiddle();
 		/** Players start invincible for (n)ms **/
 		this.invincibilityTimer = 5000;
 
@@ -36,8 +36,8 @@ export class ServerPlayer extends Player {
 
 	private createBodyParts() {
 		// Calculate offset for body and tail based on direction
-		const offsetX = Math.cos(this.directions[0]) * this.bodyOffset;
-		const offsetY = Math.sin(this.directions[0]) * this.bodyOffset;
+		const offsetX = Math.cos(this.direction) * this.bodyOffset;
+		const offsetY = Math.sin(this.direction) * this.bodyOffset;
 
 		// Create positions for head, body, and tail
 		let x = this.positions[0].x;
@@ -49,7 +49,6 @@ export class ServerPlayer extends Player {
 			let newPos = new Position(x, y);
 			newPos.next = new Position(this.positions[i - 1].x, this.positions[i - 1].y);
 			this.positions.push(newPos);
-			this.directions.push(this.directions[0]);
 		}
 	}
 }

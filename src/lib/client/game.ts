@@ -217,7 +217,7 @@ export class Game {
 		if (this.playerOthers.hasOwnProperty(data.clientId)) {
 			let player = this.playerOthers[data.clientId];
 			player.positions = data.positions;
-			player.directions = data.directions;
+			player.direction = data.direction;
 			player.length = data.length;
 			player.size = data.size;
 			player.head.direction = data.direction;
@@ -228,7 +228,7 @@ export class Game {
 
 	private updatePlayerSelf(data) {
 		this.playerSelf.positions = data.positions;
-		this.playerSelf.directions = data.directions;
+		this.playerSelf.direction = data.direction;
 		this.playerSelf.size = data.size;
 		this.playerSelf.length = data.length;
 		this.playerSelf.head.direction = data.direction;
@@ -431,7 +431,7 @@ export class Game {
 		this.playerSelf = new ClientPlayer(
 			this.socket.id!,
 			data.positions,
-			data.directions,
+			data.direction,
 			data.length,
 			data.speed,
 			data.rotateRate,
@@ -473,7 +473,7 @@ export class Game {
 		let player = new ClientPlayer(
 			data.clientId,
 			data.positions,
-			data.directions,
+			data.direction,
 			data.length,
 			data.speed,
 			data.rotateRate,

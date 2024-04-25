@@ -17,7 +17,7 @@ export class ClientPlayer extends Player {
 	constructor(
 		clientId: string,
 		pos: Position[],
-		dir: number[],
+		dir: number,
 		length: number,
 		speed: number,
 		rotateRate: number,
@@ -26,7 +26,7 @@ export class ClientPlayer extends Player {
 	) {
 		super(clientId, new Position(0, 0));
 		this.positions = pos;
-		this.directions = dir;
+		this.direction = dir;
 		this.length = length;
 		this.speed = speed;
 		this.rotateRate = rotateRate;
@@ -53,7 +53,7 @@ export class ClientPlayer extends Player {
 			this.particleSystem.position.x = this.positions[0].x + this.size / 2;
 			this.particleSystem.position.y = this.positions[0].y + this.size / 2;
 
-			this.particleSystem.direction = this.directions[0];
+			this.particleSystem.direction = this.direction;
 			this.particleSystem.update(elapsedTime, 3);
 		}
 	}

@@ -14,7 +14,7 @@ export class Player {
 	speed!: number;
 	rotateRate: number = Math.PI / 300;
 	positions: Position[] = [];
-	directions: number[] = []; // Direction(s) in radians for each body part
+	direction: number = 0; // Direction(s) in radians for head
 	tps: { [idx: number]: Position } = {};
 	tpsIdx = 0;
 
@@ -52,7 +52,7 @@ export class Player {
 		this.reportUpdate = true;
 
 		// Increment direction angle
-		this.directions[0] += this.rotateRate * elapsedTime;
+		this.direction += this.rotateRate * elapsedTime;
 
 		this.pushToTps();
 	}
@@ -64,7 +64,7 @@ export class Player {
 		this.reportUpdate = true;
 
 		// Decrement direction angle
-		this.directions[0] -= this.rotateRate * elapsedTime;
+		this.direction -= this.rotateRate * elapsedTime;
 		this.pushToTps();
 	}
 
@@ -91,20 +91,22 @@ export class Player {
 				this.length += Math.floor(food.size);
 				if (this.size < 1 / 40) this.size += 1 / 100000;
 
+				// Calculate angle between the last position and the second-to-last position
+				const lastPos = this.positions[this.positions.length - 1];
+				const prevPos = this.positions[this.positions.length - 2];
+				const deltaX = prevPos.x - lastPos.x;
+				const deltaY = prevPos.y - lastPos.y;
+				const angle = Math.atan2(deltaY, deltaX);
+
 				// Calculate offset for new body part
-				const offsetX = Math.cos(this.directions[this.positions.length - 1]) * this.bodyOffset;
-				const offsetY = Math.sin(this.directions[this.positions.length - 1]) * this.bodyOffset;
+				const offsetX = Math.cos(angle) * this.bodyOffset;
+				const offsetY = Math.sin(angle) * this.bodyOffset;
 
 				// Add new body part at correct offset
-				const lastPos = this.positions[this.positions.length - 1];
 				const newPos = new Position(lastPos.x - offsetX, lastPos.y - offsetY);
-				const newDir = Math.atan2(newPos.y - lastPos.y, newPos.x - lastPos.x);
 				newPos.trackingId = this.positions.at(-1)?.trackingId!;
 
 				this.positions.push(newPos);
-
-				// Enable this if you want each body part to rotate
-				this.directions.push(newDir);
 			}
 		}
 
@@ -156,7 +158,6 @@ export class Player {
 
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
-			this.directions[i] = Math.atan2(deltaY, deltaX);
 
 			// Add loop to handle passing multiple turn points in a single frame
 			while (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
@@ -173,8 +174,8 @@ export class Player {
 			}
 		}
 
-		const headDeltaX = Math.cos(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
-		const headDeltaY = Math.sin(this.directions[0]) * this.speed * (multiplier ?? 1) * elapsedTime;
+		const headDeltaX = Math.cos(this.direction) * this.speed * (multiplier ?? 1) * elapsedTime;
+		const headDeltaY = Math.sin(this.direction) * this.speed * (multiplier ?? 1) * elapsedTime;
 		this.positions[0].x += headDeltaX;
 		this.positions[0].y += headDeltaY;
 	}
@@ -204,17 +205,17 @@ export class Player {
 	 * If a snap turn is still processing, update direction towards it
 	 */
 	private updateSnapTurnAngle(elapsedTime: number) {
-		if (this.targetSnapAngle !== null && this.directions[0] !== this.targetSnapAngle) {
-			let angleDiff = this.shortestAngularDistance(this.directions[0], this.targetSnapAngle);
+		if (this.targetSnapAngle !== null && this.direction !== this.targetSnapAngle) {
+			let angleDiff = this.shortestAngularDistance(this.direction, this.targetSnapAngle);
 			let rotationDirection = Math.sign(angleDiff);
 
-			let newDirection = this.directions[0] + rotationDirection * this.rotateRate * elapsedTime;
+			let newDirection = this.direction + rotationDirection * this.rotateRate * elapsedTime;
 
 			if (Math.abs(angleDiff) < Math.abs(rotationDirection * this.rotateRate * elapsedTime)) {
-				this.directions[0] = this.targetSnapAngle;
+				this.direction = this.targetSnapAngle;
 				this.targetSnapAngle = null;
 			} else {
-				this.directions[0] = newDirection;
+				this.direction = newDirection;
 			}
 
 			this.pushToTps();
