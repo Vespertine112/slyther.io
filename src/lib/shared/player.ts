@@ -136,7 +136,7 @@ export class Player {
 	private moveSnakeForward(elapsedTime: number, multiplier?: number) {
 		if (this.state !== PlayerStates.ALIVE) return;
 
-		for (let i = this.positions.length - 1; i > 0; i--) {
+		for (let i = 1; i < this.positions.length; i++) {
 			const pos = this.positions[i];
 
 			let deltaX, deltaY, distance, ratio;
@@ -158,12 +158,12 @@ export class Player {
 			this.positions[i].x += deltaX * ratio;
 			this.positions[i].y += deltaY * ratio;
 
-			// Add loop to handle passing multiple turn points in a single frame
-			let amTail = i === this.positions.length - 1;
 			// TPS DESYNC HANDLING
 			while (pos.trackingId < this.tpsIdx && !this.tps[pos.trackingId]) {
 				pos.trackingId++;
 			}
+			// Add loop to handle passing multiple turn points in a single frame
+			let amTail = i === this.positions.length - 1;
 			while (distance <= this.speed * elapsedTime * (multiplier ?? 1)) {
 				// Remove old points from tps after the tail reaches them
 				if (amTail && this.tps[pos.trackingId]) {

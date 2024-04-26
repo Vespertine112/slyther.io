@@ -1,16 +1,16 @@
 # Overview:
 
-- A *mostly* feature-complete FOSS clone of online multiplayer snake games
-- Built on Svelte/SvelteKit, utilizing websockets for all networking
+-   A _mostly_ feature-complete FOSS clone of online multiplayer snake games
+-   Built on Svelte/SvelteKit, utilizing websockets for all networking
 
 # Usage:
 
-- ```$ npm install```
-- ```$ npm run dev```
+-   `$ npm install`
+-   `$ npm run dev`
 
 # Demo:
 
-- You can watch a full demo [here](https://www.youtube.com/watch?v=Ma6ILRWCc4o)
+-   You can watch a full demo [here](https://www.youtube.com/watch?v=Ma6ILRWCc4o)
 
 # Features:
 
@@ -24,3 +24,10 @@
 -   Particle systems on death & eating
 -   Entity Culling
 -   And much more!
+
+# Next Steps:
+
+-   Re-write the game server in go & add parallelization
+-   Create a docker image for deployments
+-   Optimize the client-side code
+-   Deploy
