@@ -245,6 +245,8 @@ export class Game {
 			this.playerSelf.tps[tpIdx] = tp;
 		}
 
+		this.inputLatency = performance.now() - this.messageHistory.front?.currentTime || 0;
+
 		let done = false;
 		while (!done && !this.messageHistory.empty) {
 			if (this.messageHistory.front.id === data.lastMessageId) {
@@ -254,10 +256,6 @@ export class Game {
 		}
 
 		let memory = new Queue<any>();
-
-		if (!this.messageHistory.empty) {
-			this.inputLatency = performance.now() - this.messageHistory.front?.currentTime;
-		}
 
 		while (!this.messageHistory.empty) {
 			let message = this.messageHistory.dequeue();

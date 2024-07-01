@@ -95,7 +95,7 @@ export class Player {
 				this.score++;
 				if (this.size < this.maxSize) this.size += 1 / 100000;
 				if (this.length < this.maxLength) {
-					this.length += Math.floor(food.size);
+					this.length += 1;
 					// Calculate angle between the last position and the second-to-last position
 					const lastPos = this.positions[this.positions.length - 1];
 					const prevPos = this.positions[this.positions.length - 2];
